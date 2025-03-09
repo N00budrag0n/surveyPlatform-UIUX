@@ -194,6 +194,30 @@ class SurveyQuestionsSeeder extends Seeder
                             }
                         ]
                     }
+                ],
+                "ab_testing": [
+                    {
+                        "id": "ab1",
+                        "topic": "Homepage Design",
+                        "description": "Compare these two homepage layouts",
+                        "variant_a": {
+                            "image": "homepage_a.jpg"
+                        },
+                        "variant_b": {
+                            "image": "homepage_b.jpg"
+                        }
+                    },
+                    {
+                        "id": "ab2",
+                        "topic": "Navigation Menu",
+                        "description": "Which navigation style do you prefer?",
+                        "variant_a": {
+                        "image": "nav_a.jpg"
+                        },
+                        "variant_b": {
+                            "image": "nav_b.jpg"
+                        }
+                    }
                 ]
             }',
         ]);
