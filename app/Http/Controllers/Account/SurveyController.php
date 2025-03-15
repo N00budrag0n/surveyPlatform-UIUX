@@ -39,7 +39,7 @@ class SurveyController extends Controller
             } else {
                 return redirect()->route('account.surveys.create');
             }
-        } 
+        }
 
         $surveys->appends(['q' => request()->q]);
 
@@ -140,6 +140,40 @@ class SurveyController extends Controller
             ]);
         }
 
+        $questionsData = json_decode($request->survey_questions, true);
+
+        // Handle A/B Testing image uploads
+
+        if (isset($questionsData['ab_testing'])) {
+            foreach ($questionsData['ab_testing'] as $groupIndex => $group) {
+                if (isset($group['comparisons'])) {
+                    foreach ($group['comparisons'] as $compIndex => $comparison) {
+                        // process image A
+                        $variantAKey = "ab_image_{$group['name']}_{$comparison['id']}_a";
+                        if ($request->hasFile($variantAKey)) {
+                            $image = $request->file($variantAKey);
+                            $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                            $image->storeAs('public/image/ab_testing/', $imageName);
+
+                            // Update the image path in the questions data
+                            $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = $imageName;
+                        }
+                        // process image B
+                        $variantBKey = "ab_image_{$group['name']}_{$comparison['id']}_b";
+                        if ($request->hasFile($variantBKey)) {
+                            $image = $request->file($variantBKey);
+                            $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                            $image->storeAs('public/image/ab_testing/', $imageName);
+
+                            // Update the image path in the questions data
+                            $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = $imageName;
+                        }
+                    }
+                }
+            }
+            $request->merge(['survey_questions' => json_encode($questionsData)]);
+        }
+
         SurveyQuestions::create([
             'survey_id' => $survey->id,
             'questions_data' => $request->survey_questions
@@ -175,7 +209,7 @@ class SurveyController extends Controller
             $categories = Category::all();
         } else {
             $categories = Category::whereNotIn('status', ['Private'])->get();
-        }        
+        }
         $methods = Method::all();
         $surveyCategories = SurveyHasCategories::where('survey_id', $survey->id)->get();
         $surveyMethods = SurveyHasMethods::where('survey_id', $survey->id)->get();
