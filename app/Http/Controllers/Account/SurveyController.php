@@ -288,6 +288,55 @@ class SurveyController extends Controller
             ]);
         }
 
+        // Process survey questions data
+        $questionsData = json_decode($request->survey_questions, true);
+
+        // Handle A/B testing image uploads if present
+        if (isset($questionsData['ab_testing'])) {
+            foreach ($questionsData['ab_testing'] as $groupIndex => $group) {
+                if (isset($group['comparisons'])) {
+                    foreach ($group['comparisons'] as $compIndex => $comparison) {
+                        // Process variant A image
+                        $variantAKey = "ab_image_{$group['name']}_{$comparison['id']}_a";
+                        if ($request->hasFile($variantAKey)) {
+                            // Delete old image if it exists and is not a placeholder
+                            if (isset($comparison['variant_a']['image']) &&
+                                !Str::contains($comparison['variant_a']['image'], 'placeholder')) {
+                                Storage::disk('local')->delete('public/image/ab_testing/' . $comparison['variant_a']['image']);
+                            }
+
+                            $image = $request->file($variantAKey);
+                            $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                            $image->storeAs('public/image/ab_testing/', $imageName);
+
+                            // Update the image path in the questions data
+                            $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = $imageName;
+                        }
+
+                        // Process variant B image
+                        $variantBKey = "ab_image_{$group['name']}_{$comparison['id']}_b";
+                        if ($request->hasFile($variantBKey)) {
+                            // Delete old image if it exists and is not a placeholder
+                            if (isset($comparison['variant_b']['image']) &&
+                                !Str::contains($comparison['variant_b']['image'], 'placeholder')) {
+                                Storage::disk('local')->delete('public/image/ab_testing/' . $comparison['variant_b']['image']);
+                            }
+
+                            $image = $request->file($variantBKey);
+                            $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                            $image->storeAs('public/image/ab_testing/', $imageName);
+
+                            // Update the image path in the questions data
+                            $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = $imageName;
+                        }
+                    }
+                }
+            }
+
+            // Update the questions data with the new image paths
+            $request->merge(['survey_questions' => json_encode($questionsData)]);
+        }
+
         $survey->update([
             'title'          => $request->title,
             'theme'          => $request->theme,
