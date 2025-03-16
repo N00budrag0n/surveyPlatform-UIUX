@@ -28,10 +28,12 @@ export default function SurveysCreate() {
     const [surveyVisibility, setSurveyVisibility] = useState(null);
     const [susQuestionsData, setSusQuestionsData] = useState([]);
     const [tamQuestionsData, setTamQuestionsData] = useState([]);
+    const [abTestingData, setAbTestingData] = useState([]);
     const [user_id] = useState(auth.user.id);
 
     const [isMethodSusFilled, setIsMethodSusFilled] = useState();
     const [isMethodTamFilled, setIsMethodTamFilled] = useState();
+    const [isMethodAbTestFilled, setIsMethodAbTestFilled] = useState();
 
     const tamJson = [];
     const susJson = {};
@@ -40,18 +42,38 @@ export default function SurveysCreate() {
     const [isResetQuestions, setIsResetQuestions] = useState(true);
 
     useEffect(() => {
-        if (surveyMethodsData.includes(1) && surveyMethodsData.includes(2)) {
+        if (surveyMethodsData.includes(1) && surveyMethodsData.includes(2) && surveyMethodsData.includes(3)) {
             setIsMethodSusFilled(true);
             setIsMethodTamFilled(true);
+            setIsMethodAbTestFilled(true);
+        } else if (surveyMethodsData.includes(1) && surveyMethodsData.includes(2)) {
+            setIsMethodSusFilled(true);
+            setIsMethodTamFilled(true);
+            setIsMethodAbTestFilled(false);
+        } else if (surveyMethodsData.includes(1) && surveyMethodsData.includes(3)) {
+            setIsMethodSusFilled(true);
+            setIsMethodTamFilled(false);
+            setIsMethodAbTestFilled(true);
+        } else if (surveyMethodsData.includes(2) && surveyMethodsData.includes(3)) {
+            setIsMethodSusFilled(false);
+            setIsMethodTamFilled(true);
+            setIsMethodAbTestFilled(true);
         } else if (surveyMethodsData.includes(1)) {
             setIsMethodSusFilled(true);
             setIsMethodTamFilled(false);
+            setIsMethodAbTestFilled(false);
         } else if (surveyMethodsData.includes(2)) {
             setIsMethodSusFilled(false);
             setIsMethodTamFilled(true);
+            setIsMethodAbTestFilled(false);
+        } else if (surveyMethodsData.includes(3)) {
+            setIsMethodSusFilled(false);
+            setIsMethodTamFilled(false);
+            setIsMethodAbTestFilled(true);
         } else {
             setIsMethodSusFilled(false);
             setIsMethodTamFilled(false);
+            setIsMethodAbTestFilled(false);
         }
     }, [surveyMethodsData]);
 
@@ -202,22 +224,21 @@ export default function SurveysCreate() {
     });
 
     const combineSurveyData = () => {
-        if (isMethodSusFilled && isMethodTamFilled) {
-            return JSON.stringify({
-                sus: susJson,
-                tam: tamJson,
-            });
-        } else if (isMethodSusFilled) {
-            return JSON.stringify({
-                sus: susJson,
-            });
-        } else if (isMethodTamFilled) {
-            return JSON.stringify({
-                tam: tamJson,
-            });
-        } else {
-            return null;
+        let data = {};
+
+        if (isMethodSusFilled) {
+            data.sus = susJson;
         }
+
+        if (isMethodTamFilled) {
+            data.tam = tamJson;
+        }
+
+        if (isMethodAbTestFilled) {
+            data.ab_testing = abTestingData;
+        }
+
+        return JSON.stringify(data);
     };
 
     const storeSurvey = async (e) => {
@@ -722,6 +743,261 @@ export default function SurveysCreate() {
                                 color="btn-danger"
                                 iconClass="fa fa-trash"
                                 onClick={deleteAllTamQuestions}
+                            />
+                        </div>
+                    </AccordionLayout>
+                )}
+                {isMethodAbTestFilled && (
+                    <AccordionLayout
+                        title="Preview Question - A/B Testing"
+                        defaultOpen={false}
+                    >
+                        <div className="alert alert-danger">
+                            <div className="d-flex align-items-center">
+                                <i className="fas fa-exclamation-triangle mb-3"></i>
+                                <h5 className="mb-3 ms-2">
+                                    A/B Testing Guidelines
+                                </h5>
+                            </div>
+                            <p>
+                                1. Create comparison groups to organize related design comparisons.
+                                <br />
+                                2. Each comparison should have exactly two variants (A and B).
+                                <br />
+                                3. Upload images for each variant to help respondents visualize the differences.
+                                <br />
+                                4. Provide clear titles and descriptions for each variant.
+                            </p>
+                        </div>
+                        <hr />
+
+                        {/* A/B Testing Groups */}
+                        {abTestingData.map((group, groupIndex) => (
+                            <div key={groupIndex} className="mb-4">
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <InputField
+                                            label={`Group ${groupIndex + 1} Name`}
+                                            type="text"
+                                            value={group.name}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].name = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                        />
+                                        <InputField
+                                            label="Group Description"
+                                            type="text"
+                                            value={group.description}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].description = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Comparisons within this group */}
+                                {group.comparisons.map((comparison, compIndex) => (
+                                    <div key={compIndex} className="mb-3 border p-3 rounded">
+                                        <h6>Comparison {compIndex + 1}</h6>
+                                        <InputField
+                                            label="Question"
+                                            type="text"
+                                            value={comparison.title}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].comparisons[compIndex].title = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                        />
+
+                                        <div className="row">
+                                            {/* Variant A */}
+                                            <div className="col-md-6">
+                                                <div className="card">
+                                                    <div className="card-header">Variant A</div>
+                                                    <div className="card-body">
+                                                        <InputField
+                                                            label="Title"
+                                                            type="text"
+                                                            value={comparison.variant_a.title}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_a.title = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        <InputField
+                                                            label="Description"
+                                                            type="text"
+                                                            value={comparison.variant_a.description}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_a.description = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        <InputField
+                                                            label="Image"
+                                                            type="file"
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_a.image = e.target.files[0];
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        {comparison.variant_a.image && (
+                                                            <img
+                                                                src={typeof comparison.variant_a.image === 'string'
+                                                                    ? `/storage/image/ab_testing/${comparison.variant_a.image}`
+                                                                    : URL.createObjectURL(comparison.variant_a.image)
+                                                                }
+                                                                alt="Variant A"
+                                                                className="img-fluid mt-2"
+                                                                style={{ maxHeight: '150px' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Variant B */}
+                                            <div className="col-md-6">
+                                                <div className="card">
+                                                    <div className="card-header">Variant B</div>
+                                                    <div className="card-body">
+                                                        <InputField
+                                                            label="Title"
+                                                            type="text"
+                                                            value={comparison.variant_b.title}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_b.title = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        <InputField
+                                                            label="Description"
+                                                            type="text"
+                                                            value={comparison.variant_b.description}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_b.description = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        <InputField
+                                                            label="Image"
+                                                            type="file"
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_b.image = e.target.files[0];
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                        />
+                                                        {comparison.variant_b.image && (
+                                                            <img
+                                                                src={typeof comparison.variant_b.image === 'string'
+                                                                    ? `/storage/image/ab_testing/${comparison.variant_b.image}`
+                                                                    : URL.createObjectURL(comparison.variant_b.image)
+                                                                }
+                                                                alt="Variant B"
+                                                                className="img-fluid mt-2"
+                                                                style={{ maxHeight: '150px' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="text-end mt-2">
+                                            <ButtonCRUD
+                                                type="delete"
+                                                color="btn-outline-danger"
+                                                iconClass="fas fa-trash"
+                                                onClick={() => {
+                                                    const updatedData = [...abTestingData];
+                                                    updatedData[groupIndex].comparisons.splice(compIndex, 1);
+                                                    setAbTestingData(updatedData);
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+                                ))}
+
+                                <div className="mb-3">
+                                    <ButtonCRUD
+                                        type="button"
+                                        label="Add Comparison"
+                                        color="btn-outline-primary"
+                                        iconClass="fa fa-plus"
+                                        onClick={() => {
+                                            const updatedData = [...abTestingData];
+                                            updatedData[groupIndex].comparisons.push({
+                                                id: `comp_${Date.now()}`,
+                                                title: "Which design do you prefer?",
+                                                variant_a: {
+                                                    title: "Design A",
+                                                    image: null,
+                                                    description: ""
+                                                },
+                                                variant_b: {
+                                                    title: "Design B",
+                                                    image: null,
+                                                    description: ""
+                                                }
+                                            });
+                                            setAbTestingData(updatedData);
+                                        }}
+                                    />
+                                </div>
+
+                                <div className="text-end">
+                                    <ButtonCRUD
+                                        type="delete"
+                                        color="btn-outline-danger"
+                                        iconClass="fas fa-trash"
+                                        onClick={() => {
+                                            const updatedData = [...abTestingData];
+                                            updatedData.splice(groupIndex, 1);
+                                            setAbTestingData(updatedData);
+                                        }}
+                                    />
+                                </div>
+                                <hr />
+                            </div>
+                        ))}
+
+                        <div className="mb-3">
+                            <ButtonCRUD
+                                type="button"
+                                label="Add Comparison Group"
+                                color="btn-primary"
+                                iconClass="fa fa-plus"
+                                onClick={() => {
+                                    setAbTestingData([...abTestingData, {
+                                        name: `Group ${abTestingData.length + 1}`,
+                                        description: "",
+                                        comparisons: [{
+                                            id: `comp_${Date.now()}`,
+                                            title: "Which design do you prefer?",
+                                            variant_a: {
+                                                title: "Design A",
+                                                image: null,
+                                                description: ""
+                                            },
+                                            variant_b: {
+                                                title: "Design B",
+                                                image: null,
+                                                description: ""
+                                            }
+                                        }]
+                                    }]);
+                                }}
                             />
                         </div>
                     </AccordionLayout>
