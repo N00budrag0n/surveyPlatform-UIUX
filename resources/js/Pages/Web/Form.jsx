@@ -103,6 +103,78 @@ function Form() {
         return transformedData;
     });
 
+    // AB test
+    const [abTestingResponses, setAbTestingResponses] = useState({});
+    const parsedAbTestingGroups = questionData.ab_testing || [];
+
+    // AB handler
+    const handleAbTestingSelection = (groupName, comparisonId, variant) => {
+        setAbTestingResponses(prev => {
+            const updated = { ...prev };
+
+            if (!updated[groupName]) {
+                updated[groupName] = {
+                    name: groupName,
+                    responses: []
+                };
+            }
+
+            // Find if this comparison already has a response
+            const existingResponseIndex = updated[groupName].responses.findIndex(
+                r => r.id === comparisonId
+            );
+
+            if (existingResponseIndex >= 0) {
+                updated[groupName].responses[existingResponseIndex].selected = variant;
+            } else {
+                updated[groupName].responses.push({
+                    id: comparisonId,
+                    selected: variant,
+                    reason: ''
+                });
+            }
+
+            return updated;
+        });
+    };
+
+    const handleAbTestingReason = (groupName, comparisonId, reason) => {
+        setAbTestingResponses(prev => {
+            const updated = { ...prev };
+
+            if (!updated[groupName]) {
+                return prev; // Can't add reason without selecting a variant first
+            }
+
+            const existingResponseIndex = updated[groupName].responses.findIndex(
+                r => r.id === comparisonId
+            );
+
+            if (existingResponseIndex >= 0) {
+                updated[groupName].responses[existingResponseIndex].reason = reason;
+                return updated;
+            }
+
+            return prev;
+        });
+    };
+
+    const getAbTestingSelection = (groupName, comparisonId) => {
+        if (!abTestingResponses[groupName]) return null;
+
+        const response = abTestingResponses[groupName].responses.find(r => r.id === comparisonId);
+        return response ? response.selected : null;
+    };
+
+    const getAbTestingReason = (groupName, comparisonId) => {
+        if (!abTestingResponses[groupName]) return '';
+
+        const response = abTestingResponses[groupName].responses.find(r => r.id === comparisonId);
+        return response ? response.reason || '' : '';
+    };
+
+
+
     useEffect(() => {
         loadSurveyData();
     }, [surveys.id]);
@@ -114,6 +186,7 @@ function Form() {
             formData,
             susValues,
             tamValues,
+            abTestingResponses
         };
 
         localStorage.setItem(
@@ -124,7 +197,7 @@ function Form() {
         setTimeout(() => {
             localStorage.removeItem(`surveyData_${surveys.id}`);
         }, oneWeekInMillis);
-    }, [formData, susValues, tamValues]);
+    }, [formData, susValues, tamValues, abTestingResponses]);
 
     const loadSurveyData = () => {
         const storedData = localStorage.getItem(`surveyData_${surveys.id}`);
@@ -133,6 +206,9 @@ function Form() {
             setFormData(parsedData.formData);
             setSusValues(parsedData.susValues);
             setTamValues(parsedData.tamValues);
+            if (parsedData.abTestingResponses) {
+                setAbTestingResponses(parsedData.abTestingResponses);
+            }
         }
     };
 
@@ -206,10 +282,26 @@ function Form() {
     if (parsedTamQuestions.length > 0) {
         responseData.tam = tamValues;
     }
+    if (parsedAbTestingGroups.length > 0) {
+        responseData.ab_testing = Object.values(abTestingResponses);
+    }
 
     const submitForm = (e) => {
         setIsSaving(true);
         e.preventDefault();
+
+        const responseData = {};
+
+        if (surveyMethodIds.includes(1)) {
+            responseData.sus = susValues;
+        }
+        if (surveyMethodIds.includes(2)) {
+            responseData.tam = tamValues;
+        }
+        if (surveyMethodIds.includes(3)) {
+            responseData.ab_testing = Object.values(abTestingResponses);
+        }
+
         const dataSubmit = {
             ...formData,
             survey_id: surveys.id,
@@ -400,6 +492,115 @@ function Form() {
                                                             </div>
                                                         )
                                                     )}
+                                                </div>
+                                            );
+                                        } else if (methodId == 3) {
+                                            return (
+                                                <div className="Questionnaire-ABTesting" key={index}>
+                                                    <hr />
+                                                    <h3 className="text-center text-2xl font-bold mb-4">
+                                                        Design Comparison
+                                                    </h3>
+
+                                                    {parsedAbTestingGroups.map((group, groupIndex) => (
+                                                        <div key={groupIndex} className="card mb-4">
+                                                            <div className="card-header">
+                                                                <h5>{group.name}</h5>
+                                                                {group.description && <p className="text-muted mb-0">{group.description}</p>}
+                                                            </div>
+                                                            <div className="card-body">
+                                                                {group.comparisons.map((comparison, compIndex) => (
+                                                                    <div key={comparison.id} className="mb-4">
+                                                                        <h6 className="mb-3">{comparison.title}</h6>
+
+                                                                        <div className="row">
+                                                                            <div className="col-md-6">
+                                                                                <div
+                                                                                    className={`card mb-3 ${getAbTestingSelection(group.name, comparison.id) === 'a' ? 'border-primary' : ''}`}
+                                                                                    onClick={() => handleAbTestingSelection(group.name, comparison.id, 'a')}
+                                                                                    style={{ cursor: 'pointer' }}
+                                                                                >
+                                                                                    <img
+                                                                                        className="card-img-top"
+                                                                                        src={`/storage/image/ab_testing/${comparison.variant_a.image}`}
+                                                                                        alt={comparison.variant_a.title}
+                                                                                        style={{ maxHeight: '200px', objectFit: 'contain' }}
+                                                                                    />
+                                                                                    <div className="card-body">
+                                                                                        <h5 className="card-title">{comparison.variant_a.title}</h5>
+                                                                                        <p className="card-text">{comparison.variant_a.description}</p>
+
+                                                                                        <div className="form-check">
+                                                                                            <input
+                                                                                                className="form-check-input"
+                                                                                                type="radio"
+                                                                                                name={`ab_testing_${group.name}_${comparison.id}`}
+                                                                                                id={`ab_testing_${group.name}_${comparison.id}_a`}
+                                                                                                checked={getAbTestingSelection(group.name, comparison.id) === 'a'}
+                                                                                                onChange={() => handleAbTestingSelection(group.name, comparison.id, 'a')}
+                                                                                            />
+                                                                                            <label className="form-check-label" htmlFor={`ab_testing_${group.name}_${comparison.id}_a`}>
+                                                                                                Select this design
+                                                                                            </label>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div className="col-md-6">
+                                                                                <div
+                                                                                    className={`card mb-3 ${getAbTestingSelection(group.name, comparison.id) === 'b' ? 'border-primary' : ''}`}
+                                                                                    onClick={() => handleAbTestingSelection(group.name, comparison.id, 'b')}
+                                                                                    style={{ cursor: 'pointer' }}
+                                                                                >
+                                                                                    <img
+                                                                                        className="card-img-top"
+                                                                                        src={`/storage/image/ab_testing/${comparison.variant_b.image}`}
+                                                                                        alt={comparison.variant_b.title}
+                                                                                        style={{ maxHeight: '200px', objectFit: 'contain' }}
+                                                                                    />
+                                                                                    <div className="card-body">
+                                                                                        <h5 className="card-title">{comparison.variant_b.title}</h5>
+                                                                                        <p className="card-text">{comparison.variant_b.description}</p>
+
+                                                                                        <div className="form-check">
+                                                                                            <input
+                                                                                                className="form-check-input"
+                                                                                                type="radio"
+                                                                                                name={`ab_testing_${group.name}_${comparison.id}`}
+                                                                                                id={`ab_testing_${group.name}_${comparison.id}_b`}
+                                                                                                checked={getAbTestingSelection(group.name, comparison.id) === 'b'}
+                                                                                                onChange={() => handleAbTestingSelection(group.name, comparison.id, 'b')}
+                                                                                            />
+                                                                                            <label className="form-check-label" htmlFor={`ab_testing_${group.name}_${comparison.id}_b`}>
+                                                                                                Select this design
+                                                                                            </label>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+
+                                                                        {getAbTestingSelection(group.name, comparison.id) && (
+                                                                            <div className="form-group mt-3">
+                                                                                <label htmlFor={`ab_testing_reason_${group.name}_${comparison.id}`}>
+                                                                                    Why did you choose this design? (Optional)
+                                                                                </label>
+                                                                                <textarea
+                                                                                    className="form-control"
+                                                                                    id={`ab_testing_reason_${group.name}_${comparison.id}`}
+                                                                                    rows="2"
+                                                                                    value={getAbTestingReason(group.name, comparison.id)}
+                                                                                    onChange={(e) => handleAbTestingReason(group.name, comparison.id, e.target.value)}
+                                                                                    placeholder="Please explain your choice..."
+                                                                                ></textarea>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             );
                                         } else {

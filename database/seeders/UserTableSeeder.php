@@ -91,16 +91,22 @@ class UserTableSeeder extends Seeder
 
         $permissions1 = Permission::all();
         $permissions2 = Permission::whereNotIn('name', [
-            'dashboard.index.full', 'articles.index.full', 'sus.index.full', 'tam.index.full', 'roles.index', 'roles.edit', 'roles.create', 'roles.delete', 'roles.index.full', 'permissions.index',
+            'dashboard.index.full', 'articles.index.full', 'sus.index.full', 'tam.index.full', 'ab_test.index.full', 'roles.index', 'roles.edit', 'roles.create', 'roles.delete', 'roles.index.full', 'permissions.index',
             'users.index', 'users.delete', 'users.edit', 'users.create',
         ])->get();
         $permissions3 = Permission::whereIn('name', [
-            'dashboard.index', 'profile.index', 'profile.edit', 'profile.upload.certificate', 'profile.change.password', 'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
-            'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export', 'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
+            'dashboard.index', 'profile.index', 'profile.edit', 'profile.upload.certificate', 'profile.change.password',
+            'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
+            'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export',
+            'ab_test.index', 'ab_test.statistics', 'ab_test.charts', 'ab_test.responses', 'ab_test.export',
+            'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
         ])->get();
         $permissions4 = Permission::whereIn('name', [
-            'dashboard.index', 'profile.index', 'profile.edit', 'profile.upload.certificate', 'profile.change.password', 'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
-            'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export', 'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
+            'dashboard.index', 'profile.index', 'profile.edit', 'profile.upload.certificate', 'profile.change.password',
+            'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
+            'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export',
+            'ab_test.index', 'ab_test.statistics', 'ab_test.charts', 'ab_test.responses', 'ab_test.export',
+            'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
         ])->get();
 
 

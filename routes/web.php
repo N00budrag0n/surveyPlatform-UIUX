@@ -95,11 +95,9 @@ Route::group(['middleware' => 'cors'], function () {
             Route::get('/tam/{id}', [App\Http\Controllers\Account\TamController::class, 'show'])
                 ->middleware('permission:tam.index|tam.index.full|tam.statistics|tam.charts|tam.responses|tam.export')->name('account.tam.id');
             Route::get('/ab_test', [\App\Http\Controllers\Account\AbTestController::class, 'index'])
-            ->name('account.ab_test.index')
-            ->middleware('permission:ab_test.index|ab_test.index.full');
+                ->middleware('permission:ab_test.index|ab_test.index.full')->name('account.ab_test');
             Route::get('/ab_test/{id}', [\App\Http\Controllers\Account\AbTestController::class, 'show'])
-                ->name('account.ab_test.id')
-                ->middleware('permission:ab_test.index|ab_test.index.full');
+                ->middleware('permission:ab_test.index|ab_test.index.full|ab_test.statistics|ab_test.charts|ab_test.responses|ab_test.export')->name('account.ab_test.id');
         });
     });
 });

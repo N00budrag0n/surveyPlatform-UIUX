@@ -42,6 +42,14 @@ class PermissionsTableSeeder extends Seeder
         Permission::create(['name' => 'tam.responses', 'guard_name' => 'web']);
         Permission::create(['name' => 'tam.export', 'guard_name' => 'web']);
 
+        // permission ab_test result
+        Permission::create(['name' => 'ab_test.index', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ab_test.index.full', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ab_test.statistics', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ab_test.charts', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ab_test.responses', 'guard_name' => 'web']);
+        Permission::create(['name' => 'ab_test.export', 'guard_name' => 'web']);
+
         //permission surveys
         Permission::create(['name' => 'surveys.index', 'guard_name' => 'web']);
         Permission::create(['name' => 'surveys.index.full', 'guard_name' => 'web']);
