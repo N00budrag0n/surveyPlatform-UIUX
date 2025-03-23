@@ -251,23 +251,112 @@ export default function SurveysCreate() {
             return;
         }
 
+        const formData = new FormData();
+        formData.append('title', title);
+        if (image) formData.append('image', image);
+        formData.append('theme', theme);
+        formData.append('description', description);
+        formData.append('url_website', url_website);
+        formData.append('embed_design', embed_design);
+        formData.append('embed_prototype', embed_prototype);
+        formData.append('survey_categories', JSON.stringify(surveyCategoriesData));
+        formData.append('survey_methods', JSON.stringify(surveyMethodsData));
+        formData.append('general_access', surveyVisibility);
+        formData.append('user_id', user_id);
+
+        const abTestingDataForJson = JSON.parse(JSON.stringify(abTestingData));
+
+        if (abTestingData.length > 0) {
+            abTestingData.forEach((group, groupIndex) => {
+                if (group.comparisons) {
+                    group.comparisons.forEach((comparison, compIndex) => {
+                        // Handle variant A image
+                        if (comparison.variant_a.image instanceof File) {
+                            const fieldName = `ab_image_${group.name.replace(/\s+/g, '_')}_${comparison.id}_a`;
+                            formData.append(fieldName, comparison.variant_a.image);
+
+                            // Set a placeholder in the JSON to indicate there's an image
+                            abTestingDataForJson[groupIndex].comparisons[compIndex].variant_a.image =
+                                `__FILE_PLACEHOLDER_${fieldName}__`;
+                        }
+
+                        // Handle variant B image
+                        if (comparison.variant_b.image instanceof File) {
+                            const fieldName = `ab_image_${group.name.replace(/\s+/g, '_')}_${comparison.id}_b`;
+                            formData.append(fieldName, comparison.variant_b.image);
+
+                            // Set a placeholder in the JSON to indicate there's an image
+                            abTestingDataForJson[groupIndex].comparisons[compIndex].variant_b.image =
+                                `__FILE_PLACEHOLDER_${fieldName}__`;
+                        }
+                    });
+                }
+            });
+        }
+
+        // Prepare the survey questions data
+        let surveyQuestionsData = {};
+        if (isMethodSusFilled) {
+            surveyQuestionsData.sus = susJson;
+        }
+        if (isMethodTamFilled) {
+            surveyQuestionsData.tam = tamJson;
+        }
+        if (isMethodAbTestFilled) {
+            surveyQuestionsData.ab_testing = abTestingDataForJson;
+        }
+
+        formData.append('survey_questions', JSON.stringify(surveyQuestionsData));
+
+        for (let [key, value] of formData.entries()) {
+            console.log(`${key}: ${value instanceof File ? 'File: ' + value.name : value}`);
+        }
+
+        // Inertia.post(
+        //     "/account/surveys",
+        //     {
+        //         title: title,
+        //         image: image,
+        //         theme: theme,
+        //         description: description,
+        //         url_website: url_website,
+        //         embed_design: embed_design,
+        //         embed_prototype: embed_prototype,
+        //         survey_categories: surveyCategoriesData,
+        //         survey_methods: surveyMethodsData,
+        //         general_access: surveyVisibility,
+        //         survey_questions: combineSurveyData(),
+        //         user_id: user_id,
+        //     },
+        //     {
+        //         onSuccess: () => {
+        //             Swal.fire({
+        //                 title: "Success!",
+        //                 text: "Data saved successfully!",
+        //                 icon: "success",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onError: () => {
+        //             Swal.fire({
+        //                 title: "Error!",
+        //                 text: "Data failed to save!",
+        //                 icon: "error",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onFinish: () => {
+        //             setIsSaving(false);
+        //         },
+        //     }
+        // );
         Inertia.post(
             "/account/surveys",
+            formData,
             {
-                title: title,
-                image: image,
-                theme: theme,
-                description: description,
-                url_website: url_website,
-                embed_design: embed_design,
-                embed_prototype: embed_prototype,
-                survey_categories: surveyCategoriesData,
-                survey_methods: surveyMethodsData,
-                general_access: surveyVisibility,
-                survey_questions: combineSurveyData(),
-                user_id: user_id,
-            },
-            {
+                forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({
                         title: "Success!",
