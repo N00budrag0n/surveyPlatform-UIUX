@@ -101,3 +101,13 @@ Route::group(['middleware' => 'cors'], function () {
         });
     });
 });
+
+// Add this route for testing
+Route::get('/test-ab-image/{filename}', function ($filename) {
+    $path = storage_path('app/public/image/ab_testing/' . $filename);
+    if (file_exists($path)) {
+        return response()->file($path);
+    }
+    return 'File not found: ' . $path;
+})->middleware('auth');
+

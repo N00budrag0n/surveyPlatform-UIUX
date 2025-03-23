@@ -50,6 +50,20 @@ export default function Sidebar() {
                     </Link>
                 )}
 
+                {hasAnyPermission(["ab_test.index", "ab_test.index.full"]) && (
+                    <Link
+                        href="/account/ab_test"
+                        className={`${
+                            url.startsWith("/account/ab_test")
+                                ? "active list-group-item list-group-item-action list-group-item-light p-3"
+                                : "list-group-item list-group-item-action list-group-item-light p-3"
+                        }`}
+                    >
+                        <i className="fa fa-poll-h me-2"></i> A/B Testing Results
+                    </Link>
+                )}
+
+
                 {hasAnyPermission(["surveys.index", "surveys.index.full"]) && (
                     <Link
                         href="/account/surveys"

@@ -11,6 +11,7 @@ import ImageView from "../../../Utils/ImageView";
 import { Head, usePage } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import Swal from "sweetalert2";
+import ABTestingGroups from "../../../Components/ABTestingGroups";
 
 export default function SurveyEdit() {
     const {
@@ -275,24 +276,109 @@ export default function SurveyEdit() {
             return;
         }
 
+        const formData = new FormData();
+
+        formData.append('_method', 'PUT'); // For method spoofing
+        formData.append('title', title);
+        if (image) formData.append('image', image);
+        formData.append('theme', theme);
+        formData.append('description', description);
+        formData.append('url_website', url_website);
+        formData.append('embed_design', embed_design);
+        formData.append('embed_prototype', embed_prototype);
+        formData.append('survey_visible', surveyVisibility);
+        formData.append('user_id', user_id);
+
+        surveyCategoriesData.forEach(category => {
+            formData.append('survey_categories[]', category);
+        });
+
+        surveyMethodsData.forEach(method => {
+            formData.append('survey_methods[]', method);
+        });
+
+        let questionsData = {};
+
+        if (isMethodSusFilled) {
+            questionsData.sus = susJson;
+        }
+
+        if (isMethodTamFilled) {
+            questionsData.tam = tamJson;
+        }
+
+        if (isMethodAbTestFilled && abTestingData.length > 0) {
+            // Create a deep copy to avoid modifying the original state
+            questionsData.ab_testing = JSON.parse(JSON.stringify(abTestingData));
+
+            // Add A/B testing images to FormData
+            abTestingData.forEach((group, groupIndex) => {
+                if (group.comparisons) {
+                    group.comparisons.forEach((comparison, compIndex) => {
+                        // Handle variant A image
+                        if (comparison.variant_a.image instanceof File) {
+                            const fileKey = `ab_image_${group.name}_${comparison.id}_a`;
+                            formData.append(fileKey, comparison.variant_a.image);
+                        }
+
+                        // Handle variant B image
+                        if (comparison.variant_b.image instanceof File) {
+                            const fileKey = `ab_image_${group.name}_${comparison.id}_b`;
+                            formData.append(fileKey, comparison.variant_b.image);
+                        }
+                    });
+                }
+            });
+        }
+
+        formData.append('survey_questions', JSON.stringify(questionsData));
+
+        // Inertia.post(
+        //     `/account/surveys/${survey.id}`,
+        //     {
+        //         title: title,
+        //         image: image,
+        //         theme: theme,
+        //         description: description,
+        //         url_website: url_website,
+        //         embed_design: embed_design,
+        //         embed_prototype: embed_prototype,
+        //         survey_categories: surveyCategoriesData,
+        //         survey_methods: surveyMethodsData,
+        //         survey_visible: surveyVisible,
+        //         survey_questions: combineSurveyData(),
+        //         user_id: user_id,
+        //         _method: "PUT",
+        //     },
+        //     {
+        //         onSuccess: () => {
+        //             Swal.fire({
+        //                 title: "Success!",
+        //                 text: "Data updated successfully!",
+        //                 icon: "success",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onError: () => {
+        //             Swal.fire({
+        //                 title: "Error!",
+        //                 text: "Data failed to save!",
+        //                 icon: "error",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onFinish: () => {
+        //             setIsSaving(false);
+        //         },
+        //     },
+        // );
         Inertia.post(
             `/account/surveys/${survey.id}`,
+            formData,
             {
-                title: title,
-                image: image,
-                theme: theme,
-                description: description,
-                url_website: url_website,
-                embed_design: embed_design,
-                embed_prototype: embed_prototype,
-                survey_categories: surveyCategoriesData,
-                survey_methods: surveyMethodsData,
-                survey_visible: surveyVisible,
-                survey_questions: combineSurveyData(),
-                user_id: user_id,
-                _method: "PUT",
-            },
-            {
+                forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({
                         title: "Success!",
@@ -302,10 +388,11 @@ export default function SurveyEdit() {
                         timer: 1500,
                     });
                 },
-                onError: () => {
+                onError: (errors) => {
+                    console.error("Form submission errors:", errors);
                     Swal.fire({
                         title: "Error!",
-                        text: "Data failed to save!",
+                        text: "Data failed to update!",
                         icon: "error",
                         showConfirmButton: false,
                         timer: 1500,
@@ -314,7 +401,7 @@ export default function SurveyEdit() {
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            },
+            }
         );
     };
 
@@ -375,7 +462,7 @@ export default function SurveyEdit() {
                     title={"Edit Survey - " + survey.title}
                     icon="fas fa-scroll"
                 >
-                    <form onSubmit={updateSurvey}>
+                    <form onSubmit={updateSurvey} encType="multipart/form-data">
                         <InputField
                             label="Image Thumbnail (max 2MB)"
                             type="file"
@@ -793,6 +880,11 @@ export default function SurveyEdit() {
                             </p>
                         </div>
                         <hr />
+
+                        <ABTestingGroups
+                            abTestingData={abTestingData}
+                            setAbTestingData={setAbTestingData}
+                        />
 
                         {/* A/B Testing Groups */}
                         {abTestingData.map((group, groupIndex) => (
