@@ -11,6 +11,7 @@ import ImageView from "../../../Utils/ImageView";
 import { Head, usePage } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import Swal from "sweetalert2";
+import ABTestingGroups from "../../../Components/ABTestingGroups";
 
 export default function SurveyEdit() {
     const {
@@ -36,10 +37,12 @@ export default function SurveyEdit() {
     const [surveyVisible, setSurveyVisible] = useState(null);
     const [susQuestionsData, setSusQuestionsData] = useState([]);
     const [tamQuestionsData, setTamQuestionsData] = useState([]);
+    const [abTestingData, setAbTestingData] = useState([]);
     const [user_id] = useState(auth.user.id);
 
     const [isMethodSusFilled, setIsMethodSusFilled] = useState();
     const [isMethodTamFilled, setIsMethodTamFilled] = useState();
+    const [isMethodAbTestFilled, setIsMethodAbTestFilled] = useState(false);
 
     const tamJson = [];
     const susJson = {};
@@ -89,24 +92,41 @@ export default function SurveyEdit() {
 
         setSusQuestionsData(parsedSusQuestions);
         setTamQuestionsData(parsedTamQuestions);
+
+        // Parse A/B testing data
+        const data = JSON.parse(surveyQuestions[0].questions_data);
+        if (data.ab_testing) {
+            setAbTestingData(data.ab_testing);
+        }
     }, [survey, surveyCategories, surveyMethods]);
 
     const checkSurveyMethods = (data) => {
         let isSusFilled = false;
         let isTamFilled = false;
+        let isAbTestFilled = false;
 
-        if (data.includes(1) && data.includes(2)) {
+        if (data.includes(1) && data.includes(2) && data.includes(3)) {
             isSusFilled = true;
             isTamFilled = true;
+            isAbTestFilled = true;
+        } else if (data.includes(1) && data.includes(2)) {
+            isSusFilled = true;
+            isTamFilled = true;
+        } else if (data.includes(1) && data.includes(3)) {
+            isSusFilled = true;
+            isAbTestFilled = true;
+        } else if (data.includes(2) && data.includes(3)) {
+            isTamFilled = true;
+            isAbTestFilled = true;
         } else if (data.includes(1)) {
             isSusFilled = true;
-            isTamFilled = false;
         } else if (data.includes(2)) {
-            isSusFilled = false;
             isTamFilled = true;
+        } else if (data.includes(3)) {
+            isAbTestFilled = true;
         }
 
-        return { isSusFilled, isTamFilled };
+        return { isSusFilled, isTamFilled, isAbTestFilled };
     };
 
     useEffect(() => {
@@ -114,6 +134,7 @@ export default function SurveyEdit() {
             checkSurveyMethods(surveyMethodsData);
         setIsMethodSusFilled(isSusFilled);
         setIsMethodTamFilled(isTamFilled);
+        setIsMethodAbTestFilled(isAbTestFilled);
     }, [surveyMethodsData]);
 
     const handleCheckboxCategoriesChange = (e) => {
@@ -227,24 +248,23 @@ export default function SurveyEdit() {
     });
 
     const combineSurveyData = () => {
-        checkSurveyMethods(surveyMethodsData);
-        if (isMethodSusFilled && isMethodTamFilled) {
-            return JSON.stringify({
-                sus: susJson,
-                tam: tamJson,
-            });
-        } else if (isMethodSusFilled) {
-            return JSON.stringify({
-                sus: susJson,
-            });
-        } else if (isMethodTamFilled) {
-            return JSON.stringify({
-                tam: tamJson,
-            });
-        } else {
-            return null;
+        let data = {};
+
+        if (isMethodSusFilled) {
+            data.sus = susJson;
         }
+
+        if (isMethodTamFilled) {
+            data.tam = tamJson;
+        }
+
+        if (isMethodAbTestFilled) {
+            data.ab_testing = abTestingData;
+        }
+
+        return JSON.stringify(data);
     };
+
 
     const updateSurvey = async (e) => {
         setIsSaving(true);
@@ -256,24 +276,109 @@ export default function SurveyEdit() {
             return;
         }
 
+        const formData = new FormData();
+
+        formData.append('_method', 'PUT'); // For method spoofing
+        formData.append('title', title);
+        if (image) formData.append('image', image);
+        formData.append('theme', theme);
+        formData.append('description', description);
+        formData.append('url_website', url_website);
+        formData.append('embed_design', embed_design);
+        formData.append('embed_prototype', embed_prototype);
+        formData.append('survey_visible', surveyVisibility);
+        formData.append('user_id', user_id);
+
+        surveyCategoriesData.forEach(category => {
+            formData.append('survey_categories[]', category);
+        });
+
+        surveyMethodsData.forEach(method => {
+            formData.append('survey_methods[]', method);
+        });
+
+        let questionsData = {};
+
+        if (isMethodSusFilled) {
+            questionsData.sus = susJson;
+        }
+
+        if (isMethodTamFilled) {
+            questionsData.tam = tamJson;
+        }
+
+        if (isMethodAbTestFilled && abTestingData.length > 0) {
+            // Create a deep copy to avoid modifying the original state
+            questionsData.ab_testing = JSON.parse(JSON.stringify(abTestingData));
+
+            // Add A/B testing images to FormData
+            abTestingData.forEach((group, groupIndex) => {
+                if (group.comparisons) {
+                    group.comparisons.forEach((comparison, compIndex) => {
+                        // Handle variant A image
+                        if (comparison.variant_a.image instanceof File) {
+                            const fileKey = `ab_image_${group.name}_${comparison.id}_a`;
+                            formData.append(fileKey, comparison.variant_a.image);
+                        }
+
+                        // Handle variant B image
+                        if (comparison.variant_b.image instanceof File) {
+                            const fileKey = `ab_image_${group.name}_${comparison.id}_b`;
+                            formData.append(fileKey, comparison.variant_b.image);
+                        }
+                    });
+                }
+            });
+        }
+
+        formData.append('survey_questions', JSON.stringify(questionsData));
+
+        // Inertia.post(
+        //     `/account/surveys/${survey.id}`,
+        //     {
+        //         title: title,
+        //         image: image,
+        //         theme: theme,
+        //         description: description,
+        //         url_website: url_website,
+        //         embed_design: embed_design,
+        //         embed_prototype: embed_prototype,
+        //         survey_categories: surveyCategoriesData,
+        //         survey_methods: surveyMethodsData,
+        //         survey_visible: surveyVisible,
+        //         survey_questions: combineSurveyData(),
+        //         user_id: user_id,
+        //         _method: "PUT",
+        //     },
+        //     {
+        //         onSuccess: () => {
+        //             Swal.fire({
+        //                 title: "Success!",
+        //                 text: "Data updated successfully!",
+        //                 icon: "success",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onError: () => {
+        //             Swal.fire({
+        //                 title: "Error!",
+        //                 text: "Data failed to save!",
+        //                 icon: "error",
+        //                 showConfirmButton: false,
+        //                 timer: 1500,
+        //             });
+        //         },
+        //         onFinish: () => {
+        //             setIsSaving(false);
+        //         },
+        //     },
+        // );
         Inertia.post(
             `/account/surveys/${survey.id}`,
+            formData,
             {
-                title: title,
-                image: image,
-                theme: theme,
-                description: description,
-                url_website: url_website,
-                embed_design: embed_design,
-                embed_prototype: embed_prototype,
-                survey_categories: surveyCategoriesData,
-                survey_methods: surveyMethodsData,
-                survey_visible: surveyVisible,
-                survey_questions: combineSurveyData(),
-                user_id: user_id,
-                _method: "PUT",
-            },
-            {
+                forceFormData: true,
                 onSuccess: () => {
                     Swal.fire({
                         title: "Success!",
@@ -283,10 +388,11 @@ export default function SurveyEdit() {
                         timer: 1500,
                     });
                 },
-                onError: () => {
+                onError: (errors) => {
+                    console.error("Form submission errors:", errors);
                     Swal.fire({
                         title: "Error!",
-                        text: "Data failed to save!",
+                        text: "Data failed to update!",
                         icon: "error",
                         showConfirmButton: false,
                         timer: 1500,
@@ -295,7 +401,7 @@ export default function SurveyEdit() {
                 onFinish: () => {
                     setIsSaving(false);
                 },
-            },
+            }
         );
     };
 
@@ -356,7 +462,7 @@ export default function SurveyEdit() {
                     title={"Edit Survey - " + survey.title}
                     icon="fas fa-scroll"
                 >
-                    <form onSubmit={updateSurvey}>
+                    <form onSubmit={updateSurvey} encType="multipart/form-data">
                         <InputField
                             label="Image Thumbnail (max 2MB)"
                             type="file"
@@ -748,6 +854,285 @@ export default function SurveyEdit() {
                                     />
                                 </div>
                             </>
+                        )}
+                    </AccordionLayout>
+                )}
+                {isMethodAbTestFilled && (
+                    <AccordionLayout
+                        title="Preview Question - A/B Testing"
+                        defaultOpen={false}
+                    >
+                        <div className="alert alert-danger">
+                            <div className="d-flex align-items-center">
+                                <i className="fas fa-exclamation-triangle mb-3"></i>
+                                <h5 className="mb-3 ms-2">
+                                    A/B Testing Guidelines
+                                </h5>
+                            </div>
+                            <p>
+                                1. Create comparison groups to organize related design comparisons.
+                                <br />
+                                2. Each comparison should have exactly two variants (A and B).
+                                <br />
+                                3. Upload images for each variant to help respondents visualize the differences.
+                                <br />
+                                4. Provide clear titles and descriptions for each variant.
+                            </p>
+                        </div>
+                        <hr />
+
+                        <ABTestingGroups
+                            abTestingData={abTestingData}
+                            setAbTestingData={setAbTestingData}
+                        />
+
+                        {/* A/B Testing Groups */}
+                        {abTestingData.map((group, groupIndex) => (
+                            <div key={groupIndex} className="mb-4">
+                                <div className="row">
+                                    <div className="col-md-12">
+                                        <InputField
+                                            label={`Group ${groupIndex + 1} Name`}
+                                            type="text"
+                                            value={group.name}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].name = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                            disabled={isCantEdited}
+                                        />
+                                        <InputField
+                                            label="Group Description"
+                                            type="text"
+                                            value={group.description}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].description = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                            disabled={isCantEdited}
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* Comparisons within this group */}
+                                {group.comparisons.map((comparison, compIndex) => (
+                                    <div key={compIndex} className="mb-3 border p-3 rounded">
+                                        <h6>Comparison {compIndex + 1}</h6>
+                                        <InputField
+                                            label="Question"
+                                            type="text"
+                                            value={comparison.title}
+                                            onChange={(e) => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].comparisons[compIndex].title = e.target.value;
+                                                setAbTestingData(updatedData);
+                                            }}
+                                            disabled={isCantEdited}
+                                        />
+
+                                        <div className="row">
+                                            {/* Variant A */}
+                                            <div className="col-md-6">
+                                                <div className="card">
+                                                    <div className="card-header">Variant A</div>
+                                                    <div className="card-body">
+                                                        <InputField
+                                                            label="Title"
+                                                            type="text"
+                                                            value={comparison.variant_a.title}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_a.title = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                            disabled={isCantEdited}
+                                                        />
+                                                        <InputField
+                                                            label="Description"
+                                                            type="text"
+                                                            value={comparison.variant_a.description}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_a.description = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                            disabled={isCantEdited}
+                                                        />
+                                                        {!isCantEdited && (
+                                                            <InputField
+                                                                label="Image"
+                                                                type="file"
+                                                                onChange={(e) => {
+                                                                    const updatedData = [...abTestingData];
+                                                                    updatedData[groupIndex].comparisons[compIndex].variant_a.image = e.target.files[0];
+                                                                    setAbTestingData(updatedData);
+                                                                }}
+                                                            />
+                                                        )}
+                                                        {comparison.variant_a.image && (
+                                                            <img
+                                                                src={typeof comparison.variant_a.image === 'string'
+                                                                    ? `/storage/image/ab_testing/${comparison.variant_a.image}`
+                                                                    : URL.createObjectURL(comparison.variant_a.image)
+                                                                }
+                                                                alt="Variant A"
+                                                                className="img-fluid mt-2"
+                                                                style={{ maxHeight: '150px' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Variant B */}
+                                            <div className="col-md-6">
+                                                <div className="card">
+                                                    <div className="card-header">Variant B</div>
+                                                    <div className="card-body">
+                                                        <InputField
+                                                            label="Title"
+                                                            type="text"
+                                                            value={comparison.variant_b.title}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_b.title = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                            disabled={isCantEdited}
+                                                        />
+                                                        <InputField
+                                                            label="Description"
+                                                            type="text"
+                                                            value={comparison.variant_b.description}
+                                                            onChange={(e) => {
+                                                                const updatedData = [...abTestingData];
+                                                                updatedData[groupIndex].comparisons[compIndex].variant_b.description = e.target.value;
+                                                                setAbTestingData(updatedData);
+                                                            }}
+                                                            disabled={isCantEdited}
+                                                        />
+                                                        {!isCantEdited && (
+                                                            <InputField
+                                                                label="Image"
+                                                                type="file"
+                                                                onChange={(e) => {
+                                                                    const updatedData = [...abTestingData];
+                                                                    updatedData[groupIndex].comparisons[compIndex].variant_b.image = e.target.files[0];
+                                                                    setAbTestingData(updatedData);
+                                                                }}
+                                                            />
+                                                        )}
+                                                        {comparison.variant_b.image && (
+                                                            <img
+                                                                src={typeof comparison.variant_b.image === 'string'
+                                                                    ? `/storage/image/ab_testing/${comparison.variant_b.image}`
+                                                                    : URL.createObjectURL(comparison.variant_b.image)
+                                                                }
+                                                                alt="Variant B"
+                                                                className="img-fluid mt-2"
+                                                                style={{ maxHeight: '150px' }}
+                                                            />
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {!isCantEdited && (
+                                            <div className="text-end mt-2">
+                                                <ButtonCRUD
+                                                    type="delete"
+                                                    color="btn-outline-danger"
+                                                    iconClass="fas fa-trash"
+                                                    onClick={() => {
+                                                        const updatedData = [...abTestingData];
+                                                        updatedData[groupIndex].comparisons.splice(compIndex, 1);
+                                                        setAbTestingData(updatedData);
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+
+                                {!isCantEdited && (
+                                    <div className="mb-3">
+                                        <ButtonCRUD
+                                            type="button"
+                                            label="Add Comparison"
+                                            color="btn-outline-primary"
+                                            iconClass="fa fa-plus"
+                                            onClick={() => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData[groupIndex].comparisons.push({
+                                                    id: `comp_${Date.now()}`,
+                                                    title: "Which design do you prefer?",
+                                                    variant_a: {
+                                                        title: "Design A",
+                                                        image: null,
+                                                        description: ""
+                                                    },
+                                                    variant_b: {
+                                                        title: "Design B",
+                                                        image: null,
+                                                        description: ""
+                                                    }
+                                                });
+                                                setAbTestingData(updatedData);
+                                            }}
+                                        />
+                                    </div>
+                                )}
+
+                                {!isCantEdited && (
+                                    <div className="text-end">
+                                        <ButtonCRUD
+                                            type="delete"
+                                            color="btn-outline-danger"
+                                            iconClass="fas fa-trash"
+                                            onClick={() => {
+                                                const updatedData = [...abTestingData];
+                                                updatedData.splice(groupIndex, 1);
+                                                setAbTestingData(updatedData);
+                                            }}
+                                        />
+                                    </div>
+                                )}
+                                <hr />
+                            </div>
+                        ))}
+
+                        {!isCantEdited && (
+                            <div className="mb-3">
+                                <ButtonCRUD
+                                    type="button"
+                                    label="Add Comparison Group"
+                                    color="btn-primary"
+                                    iconClass="fa fa-plus"
+                                    onClick={() => {
+                                        setAbTestingData([...abTestingData, {
+                                            name: `Group ${abTestingData.length + 1}`,
+                                            description: "",
+                                            comparisons: [{
+                                                id: `comp_${Date.now()}`,
+                                                title: "Which design do you prefer?",
+                                                variant_a: {
+                                                    title: "Design A",
+                                                    image: null,
+                                                    description: ""
+                                                },
+                                                variant_b: {
+                                                    title: "Design B",
+                                                    image: null,
+                                                    description: ""
+                                                }
+                                            }]
+                                        }]);
+                                    }}
+                                />
+                            </div>
                         )}
                     </AccordionLayout>
                 )}

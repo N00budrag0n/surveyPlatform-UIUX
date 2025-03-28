@@ -68,6 +68,7 @@ Route::group(['middleware' => 'cors'], function () {
 
             Route::get('/responses/sus/{id}/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
             Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
+            Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
 
             Route::resource('/roles', \App\Http\Controllers\Account\RoleController::class, ['as' => 'account'])
                 ->middleware('permission:roles.index|roles.create|roles.edit|roles.delete');
@@ -93,6 +94,20 @@ Route::group(['middleware' => 'cors'], function () {
                 ->middleware('permission:tam.index|tam.index.full')->name('account.tam');
             Route::get('/tam/{id}', [App\Http\Controllers\Account\TamController::class, 'show'])
                 ->middleware('permission:tam.index|tam.index.full|tam.statistics|tam.charts|tam.responses|tam.export')->name('account.tam.id');
+            Route::get('/ab_test', [\App\Http\Controllers\Account\AbTestController::class, 'index'])
+                ->middleware('permission:ab_test.index|ab_test.index.full')->name('account.ab_test');
+            Route::get('/ab_test/{id}', [\App\Http\Controllers\Account\AbTestController::class, 'show'])
+                ->middleware('permission:ab_test.index|ab_test.index.full|ab_test.statistics|ab_test.charts|ab_test.responses|ab_test.export')->name('account.ab_test.id');
         });
     });
 });
+
+// Add this route for testing
+Route::get('/test-ab-image/{filename}', function ($filename) {
+    $path = storage_path('app/public/image/ab_testing/' . $filename);
+    if (file_exists($path)) {
+        return response()->file($path);
+    }
+    return 'File not found: ' . $path;
+})->middleware('auth');
+

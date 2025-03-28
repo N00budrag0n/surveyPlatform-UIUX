@@ -101,6 +101,10 @@ export default function SurveyIndex() {
                                                     src={survey.image}
                                                     className="rounded-3"
                                                     width={"100"}
+                                                    alt={survey.title}
+                                                    onError={(e) => {
+                                                        e.target.src = '/assets/images/placeholder-image.jpg';
+                                                    }}
                                                 />
                                             </td>
                                             <td>{survey.status}</td>

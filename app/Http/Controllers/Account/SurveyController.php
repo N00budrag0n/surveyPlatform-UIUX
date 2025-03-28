@@ -39,7 +39,7 @@ class SurveyController extends Controller
             } else {
                 return redirect()->route('account.surveys.create');
             }
-        } 
+        }
 
         $surveys->appends(['q' => request()->q]);
 
@@ -68,6 +68,7 @@ class SurveyController extends Controller
 
     public function store(Request $request, SurveyHasCategories $surveyHasCategories, SurveyHasMethods $surveyHasMethods)
     {
+        // dd($request->survey_questions);
         if ($request->image != null) {
             $this->validate($request, [
                 'user_id'        => 'required',
@@ -140,13 +141,114 @@ class SurveyController extends Controller
             ]);
         }
 
+        $questionsData = json_decode($request->survey_questions, true);
+
+        // Handle A/B Testing image uploads
+
+        // if (isset($questionsData['ab_testing'])) {
+        //     foreach ($questionsData['ab_testing'] as $groupIndex => $group) {
+        //         if (isset($group['comparisons'])) {
+        //             foreach ($group['comparisons'] as $compIndex => $comparison) {
+        //                 // process image A
+        //                 $variantAKey = "ab_image_{$group['name']}_{$comparison['id']}_a";
+        //                 if ($request->hasFile($variantAKey)) {
+        //                     $image = $request->file($variantAKey);
+        //                     $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+        //                     $image->storeAs('public/image/ab_testing/', $imageName);
+
+        //                     // Update the image path in the questions data
+        //                     $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = $imageName;
+        //                 }
+        //                 // process image B
+        //                 $variantBKey = "ab_image_{$group['name']}_{$comparison['id']}_b";
+        //                 if ($request->hasFile($variantBKey)) {
+        //                     $image = $request->file($variantBKey);
+        //                     $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+        //                     $image->storeAs('public/image/ab_testing/', $imageName);
+
+        //                     // Update the image path in the questions data
+        //                     $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = $imageName;
+        //                 }
+        //             }
+        //         }
+        //     }
+        //     $request->merge(['survey_questions' => json_encode($questionsData)]);
+        // }
+
+        if (isset($questionsData['ab_testing'])) {
+            // Ensure the storage directory exists
+            if (!Storage::exists('public/image/ab_testing')) {
+                Storage::makeDirectory('public/image/ab_testing');
+            }
+
+            foreach ($questionsData['ab_testing'] as $groupIndex => $group) {
+                if (isset($group['comparisons'])) {
+                    foreach ($group['comparisons'] as $compIndex => $comparison) {
+                        // Check for variant A image placeholder
+                        if (isset($comparison['variant_a']['image']) &&
+                            is_string($comparison['variant_a']['image']) &&
+                            strpos($comparison['variant_a']['image'], '__FILE_PLACEHOLDER_') === 0) {
+
+                            // Extract the field name from the placeholder
+                            $fieldName = str_replace(['__FILE_PLACEHOLDER_', '__'], '', $comparison['variant_a']['image']);
+
+                            if ($request->hasFile($fieldName)) {
+                                $image = $request->file($fieldName);
+                                $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                                $image->storeAs('public/image/ab_testing', $imageName);
+
+                                // Update the image path in the questions data
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = $imageName;
+                            } else {
+                                // No file found, set to null
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = null;
+                            }
+                        }
+
+                        // Check for variant B image placeholder
+                        if (isset($comparison['variant_b']['image']) &&
+                            is_string($comparison['variant_b']['image']) &&
+                            strpos($comparison['variant_b']['image'], '__FILE_PLACEHOLDER_') === 0) {
+
+                            // Extract the field name from the placeholder
+                            $fieldName = str_replace(['__FILE_PLACEHOLDER_', '__'], '', $comparison['variant_b']['image']);
+
+                            if ($request->hasFile($fieldName)) {
+                                $image = $request->file($fieldName);
+                                $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+                                $image->storeAs('public/image/ab_testing', $imageName);
+
+                                // Update the image path in the questions data
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = $imageName;
+                            } else {
+                                // No file found, set to null
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = null;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Log the processed data for debugging
+            \Log::info('Processed AB Testing data:', $questionsData['ab_testing']);
+        }
+
         SurveyQuestions::create([
             'survey_id' => $survey->id,
-            'questions_data' => $request->survey_questions
+            'questions_data' => json_encode($questionsData),
         ]);
 
         if ($request->has('survey_categories')) {
+            // Check if the data is a JSON string and decode it if needed
             $surveyCategoriesData = $request->survey_categories;
+            if (is_string($surveyCategoriesData) && is_array(json_decode($surveyCategoriesData, true))) {
+                $surveyCategoriesData = json_decode($surveyCategoriesData, true);
+            }
+
+            // Ensure we have an array before proceeding
+            if (!is_array($surveyCategoriesData)) {
+                $surveyCategoriesData = [$surveyCategoriesData]; // Convert to array if it's a single value
+            }
 
             $surveyHasCategories->where('survey_id', $survey->id)->delete();
 
@@ -157,6 +259,13 @@ class SurveyController extends Controller
 
         if ($request->has('survey_methods')) {
             $surveyMethodsData = $request->survey_methods;
+            if (is_string($surveyMethodsData) && is_array(json_decode($surveyMethodsData, true))) {
+                $surveyMethodsData = json_decode($surveyMethodsData, true);
+            }
+
+            if (!is_array($surveyMethodsData)) {
+                $surveyMethodsData = [$surveyMethodsData];
+            }
 
             $surveyHasMethods->where('survey_id', $survey->id)->delete();
 
@@ -175,7 +284,7 @@ class SurveyController extends Controller
             $categories = Category::all();
         } else {
             $categories = Category::whereNotIn('status', ['Private'])->get();
-        }        
+        }
         $methods = Method::all();
         $surveyCategories = SurveyHasCategories::where('survey_id', $survey->id)->get();
         $surveyMethods = SurveyHasMethods::where('survey_id', $survey->id)->get();
@@ -254,6 +363,74 @@ class SurveyController extends Controller
             ]);
         }
 
+        // Process survey questions data
+        $questionsData = json_decode($request->survey_questions, true);
+
+        // Handle A/B Testing image uploads
+        if (isset($questionsData['ab_testing'])) {
+            // Ensure the storage directory exists
+            if (!Storage::exists('public/image/ab_testing')) {
+                Storage::makeDirectory('public/image/ab_testing');
+            }
+
+            foreach ($questionsData['ab_testing'] as $groupIndex => $group) {
+                if (isset($group['comparisons'])) {
+                    foreach ($group['comparisons'] as $compIndex => $comparison) {
+                        // Process variant A image
+                        $variantAKey = "ab_image_{$group['name']}_{$comparison['id']}_a";
+                        if ($request->hasFile($variantAKey)) {
+                            try {
+                                // Delete old image if it exists
+                                if (isset($comparison['variant_a']['image']) &&
+                                    is_string($comparison['variant_a']['image']) &&
+                                    Storage::exists('public/image/ab_testing/' . $comparison['variant_a']['image'])) {
+                                    Storage::delete('public/image/ab_testing/' . $comparison['variant_a']['image']);
+                                }
+
+                                $image = $request->file($variantAKey);
+                                $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+
+                                // Store the image
+                                $image->storeAs('public/image/ab_testing', $imageName);
+
+                                // Update the image path in the questions data
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_a']['image'] = $imageName;
+                            } catch (\Exception $e) {
+                                \Log::error('Failed to store A/B testing image: ' . $e->getMessage());
+                            }
+                        }
+
+                        // Process variant B image (similar logic)
+                        $variantBKey = "ab_image_{$group['name']}_{$comparison['id']}_b";
+                        if ($request->hasFile($variantBKey)) {
+                            try {
+                                // Delete old image if it exists
+                                if (isset($comparison['variant_b']['image']) &&
+                                    is_string($comparison['variant_b']['image']) &&
+                                    Storage::exists('public/image/ab_testing/' . $comparison['variant_b']['image'])) {
+                                    Storage::delete('public/image/ab_testing/' . $comparison['variant_b']['image']);
+                                }
+
+                                $image = $request->file($variantBKey);
+                                $imageName = 'ab_' . Str::random(10) . '.' . $image->getClientOriginalExtension();
+
+                                // Store the image
+                                $image->storeAs('public/image/ab_testing', $imageName);
+
+                                // Update the image path in the questions data
+                                $questionsData['ab_testing'][$groupIndex]['comparisons'][$compIndex]['variant_b']['image'] = $imageName;
+                            } catch (\Exception $e) {
+                                \Log::error('Failed to store A/B testing image: ' . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update the request with the modified questions data
+            $request->merge(['survey_questions' => json_encode($questionsData)]);
+        }
+
         $survey->update([
             'title'          => $request->title,
             'theme'          => $request->theme,
@@ -313,5 +490,33 @@ class SurveyController extends Controller
         $Survey->delete();
 
         return redirect()->route('account.surveys.index');
+    }
+
+    private function getExistingImage($surveyId, $groupName, $comparisonId, $variant) {
+        $surveyQuestion = SurveyQuestions::where('survey_id', $surveyId)->first();
+
+        if (!$surveyQuestion) {
+            return null;
+        }
+
+        $questionsData = json_decode($surveyQuestion->questions_data, true);
+
+        if (!isset($questionsData['ab_testing'])) {
+            return null;
+        }
+
+        foreach ($questionsData['ab_testing'] as $group) {
+            if ($group['name'] === $groupName && isset($group['comparisons'])) {
+                foreach ($group['comparisons'] as $comparison) {
+                    if ($comparison['id'] === $comparisonId) {
+                        return $variant === 'a'
+                            ? (isset($comparison['variant_a']['image']) ? $comparison['variant_a']['image'] : null)
+                            : (isset($comparison['variant_b']['image']) ? $comparison['variant_b']['image'] : null);
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 }
