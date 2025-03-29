@@ -2,6 +2,7 @@
 /node_modules
 /public/build
 /public/hot
+/accessibility-testing/node_modules
 # /public/storage
 /storage/*.key
 /vendor
