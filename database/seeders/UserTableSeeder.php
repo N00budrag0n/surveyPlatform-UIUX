@@ -99,6 +99,7 @@ class UserTableSeeder extends Seeder
             'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
             'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export',
             'ab_test.index', 'ab_test.statistics', 'ab_test.charts', 'ab_test.responses', 'ab_test.export',
+            'wcag_test.index', 'wcag_test.statistics', 'wcag_test.charts', 'wcag_test.responses', 'wcag_test.export',
             'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
         ])->get();
         $permissions4 = Permission::whereIn('name', [
@@ -106,6 +107,7 @@ class UserTableSeeder extends Seeder
             'sus.index', 'surveys.index', 'sus.statistics', 'sus.charts', 'sus.responses', 'sus.export',
             'tam.index', 'tam.statistics', 'tam.charts', 'tam.responses', 'tam.export',
             'ab_test.index', 'ab_test.statistics', 'ab_test.charts', 'ab_test.responses', 'ab_test.export',
+            'wcag_test.index', 'wcag_test.statistics', 'wcag_test.charts', 'wcag_test.responses', 'wcag_test.export',
             'surveys.index', 'surveys.create', 'surveys.edit', 'surveys.delete'
         ])->get();
 
