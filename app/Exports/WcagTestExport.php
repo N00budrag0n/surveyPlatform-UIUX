@@ -11,6 +11,7 @@ use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 
 class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
@@ -24,9 +25,30 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
 
         // Get cached WCAG results or run the test again
         $this->wcagResults = Cache::remember('wcag-test-' . $survey_id, 60 * 24, function () use ($survey) {
-            // This would call the same testing logic as in the controller
-            // For simplicity, we'll use mock data here
-            return $this->getMockWcagResults($survey->url_website);
+            try {
+                // Call our Node.js accessibility testing service
+                $response = Http::timeout(60)->post('http://localhost:3000/analyze', [
+                    'url' => $survey->url_website,
+                    'standard' => 'wcag21',
+                    'level' => 'aaa' // Test against all levels (A, AA, AAA)
+                ]);
+
+                if ($response->successful()) {
+                    return $response->json();
+                } else {
+                    return [
+                        'success' => false,
+                        'error' => 'Failed to analyze website: ' . $response->body(),
+                        'issues' => []
+                    ];
+                }
+            } catch (\Exception $e) {
+                return [
+                    'success' => false,
+                    'error' => 'Failed to analyze website: ' . $e->getMessage(),
+                    'issues' => []
+                ];
+            }
         });
     }
 
@@ -41,11 +63,12 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
         return [
             'Issue ID',
             'Impact Level',
+            'WCAG Level',
             'Description',
             'WCAG Criterion',
             'Element',
             'Location',
-            'Occurrences'
+            'Failure Summary'
         ];
     }
 
@@ -54,11 +77,12 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
         return [
             $issue['id'],
             ucfirst($issue['impact']),
+            $issue['conformance_level'] ?? 'A',
             $issue['description'],
             $issue['wcag_criterion'],
             $issue['element'],
             $issue['location'],
-            $issue['count']
+            $issue['failureSummary'] ?? ''
         ];
     }
 
@@ -72,66 +96,6 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
     {
         return [
             1 => ['font' => ['bold' => true]],
-        ];
-    }
-
-    private function getMockWcagResults($url)
-    {
-        // Same mock data function as in the controller
-        // In a real implementation, this would be a shared service
-        return [
-            'success' => true,
-            'url' => $url,
-            'timestamp' => now()->toIso8601String(),
-            'standard' => 'WCAG 2.1',
-            'level' => 'AA',
-            'issues' => [
-                [
-                    'id' => 'image-alt',
-                    'impact' => 'critical',
-                    'description' => 'Images must have alternate text',
-                    'wcag_criterion' => '1.1.1',
-                    'element' => '<img src="logo.png">',
-                    'location' => 'header',
-                    'count' => 3
-                ],
-                [
-                    'id' => 'color-contrast',
-                    'impact' => 'serious',
-                    'description' => 'Elements must have sufficient color contrast',
-                    'wcag_criterion' => '1.4.3',
-                    'element' => '<p style="color: #aaa; background-color: #eee;">Text</p>',
-                    'location' => 'main content',
-                    'count' => 5
-                ],
-                [
-                    'id' => 'keyboard-nav',
-                    'impact' => 'critical',
-                    'description' => 'All functionality must be available from a keyboard',
-                    'wcag_criterion' => '2.1.1',
-                    'element' => '<div onclick="doSomething()">Click me</div>',
-                    'location' => 'navigation',
-                    'count' => 2
-                ],
-                [
-                    'id' => 'heading-order',
-                    'impact' => 'moderate',
-                    'description' => 'Heading levels should only increase by one',
-                    'wcag_criterion' => '1.3.1',
-                    'element' => '<h1>Title</h1><h3>Subtitle</h3>',
-                    'location' => 'article',
-                    'count' => 1
-                ],
-                [
-                    'id' => 'form-labels',
-                    'impact' => 'serious',
-                    'description' => 'Form elements must have labels',
-                    'wcag_criterion' => '3.3.2',
-                    'element' => '<input type="text">',
-                    'location' => 'contact form',
-                    'count' => 4
-                ]
-            ]
         ];
     }
 }

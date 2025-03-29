@@ -3,6 +3,7 @@ import { Head, usePage } from "@inertiajs/inertia-react";
 import LayoutAccount from "../../../Layouts/Account";
 import WcagComplianceScore from "../../../Components/WcagComplianceScore";
 import WcagIssuesList from "../../../Components/WcagIssuesList";
+import WcagConformanceLevels from "../../../Components/WcagConformanceLevels";
 
 export default function WcagTestIndex() {
     const {
@@ -10,7 +11,8 @@ export default function WcagTestIndex() {
         survey,
         wcagResults,
         complianceScore,
-        issuesByCategory
+        issuesByCategory,
+        issuesByLevel
     } = usePage().props;
 
     // Make sure survey exists before accessing its properties
@@ -56,7 +58,7 @@ export default function WcagTestIndex() {
                     <div className="card-header bg-white">
                         <h5 className="card-title mb-0">
                             <i className="fas fa-universal-access me-2"></i>
-                            WCAG Compliance Testing {survey && `- ${survey.title}`}
+                            WCAG 2.1 Compliance Testing {survey && `- ${survey.title}`}
                         </h5>
                     </div>
                     <div className="card-body">
@@ -77,7 +79,7 @@ export default function WcagTestIndex() {
                                                     </a>
                                                 </p>
                                                 <h6 className="card-subtitle mb-2 text-muted">Test Standard</h6>
-                                                <p className="card-text">{wcagResults.standard} Level {wcagResults.level}</p>
+                                                <p className="card-text">{wcagResults.standard}</p>
                                                 <h6 className="card-subtitle mb-2 text-muted">Test Date</h6>
                                                 <p className="card-text">
                                                     {new Date(wcagResults.timestamp).toLocaleString()}
@@ -101,6 +103,18 @@ export default function WcagTestIndex() {
                                             role="tab"
                                         >
                                             Summary
+                                        </button>
+                                    </li>
+                                    <li className="nav-item" role="presentation">
+                                        <button
+                                            className="nav-link"
+                                            id="conformance-tab"
+                                            data-bs-toggle="tab"
+                                            data-bs-target="#conformance"
+                                            type="button"
+                                            role="tab"
+                                        >
+                                            Conformance Levels
                                         </button>
                                     </li>
                                     <li className="nav-item" role="presentation">
@@ -139,12 +153,15 @@ export default function WcagTestIndex() {
                                                                 <div>
                                                                     <p>Found {issues.length} issue types in this category:</p>
                                                                     <ul className="list-group">
-                                                                        {issues.slice(0, 3).map((issue, index) => (
+                                                                    {issues.slice(0, 3).map((issue, index) => (
                                                                             <li key={index} className="list-group-item">
                                                                                 <span className={`badge bg-${getImpactColor(issue.impact)} me-2`}>
                                                                                     {issue.impact}
                                                                                 </span>
-                                                                                {issue.description} ({issue.count} occurrences)
+                                                                                <span className={`badge bg-${getConformanceLevelColor(issue.conformance_level)} me-2`}>
+                                                                                    {issue.conformance_level || 'A'}
+                                                                                </span>
+                                                                                {issue.description}
                                                                             </li>
                                                                         ))}
                                                                         {issues.length > 3 && (
@@ -166,6 +183,15 @@ export default function WcagTestIndex() {
                                             ))}
                                         </div>
                                     </div>
+
+                                    <div
+                                        className="tab-pane fade"
+                                        id="conformance"
+                                        role="tabpanel"
+                                    >
+                                        <WcagConformanceLevels issuesByLevel={issuesByLevel} />
+                                    </div>
+
                                     <div
                                         className="tab-pane fade"
                                         id="issues"
@@ -198,3 +224,15 @@ function getImpactColor(impact) {
     }
 }
 
+function getConformanceLevelColor(level) {
+    switch (level) {
+        case 'A':
+            return 'danger';
+        case 'AA':
+            return 'warning';
+        case 'AAA':
+            return 'info';
+        default:
+            return 'secondary';
+    }
+}

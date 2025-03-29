@@ -2,16 +2,18 @@ import React, { useState } from "react";
 
 export default function WcagIssuesList({ issues }) {
     const [filter, setFilter] = useState('all');
+    const [levelFilter, setLevelFilter] = useState('all');
     const [searchTerm, setSearchTerm] = useState('');
 
-    // Filter issues based on impact level and search term
+    // Filter issues based on impact level, conformance level, and search term
     const filteredIssues = issues.filter(issue => {
         const matchesImpact = filter === 'all' || issue.impact === filter;
+        const matchesLevel = levelFilter === 'all' || issue.conformance_level === levelFilter;
         const matchesSearch = searchTerm === '' ||
             issue.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
             issue.wcag_criterion.toLowerCase().includes(searchTerm.toLowerCase());
 
-        return matchesImpact && matchesSearch;
+        return matchesImpact && matchesLevel && matchesSearch;
     });
 
     // Count issues by impact
@@ -21,6 +23,14 @@ export default function WcagIssuesList({ issues }) {
         serious: issues.filter(i => i.impact === 'serious').length,
         moderate: issues.filter(i => i.impact === 'moderate').length,
         minor: issues.filter(i => i.impact === 'minor').length
+    };
+
+    // Count issues by level
+    const levelCounts = {
+        all: issues.length,
+        A: issues.filter(i => i.conformance_level === 'A').length,
+        AA: issues.filter(i => i.conformance_level === 'AA').length,
+        AAA: issues.filter(i => i.conformance_level === 'AAA').length
     };
 
     // Get appropriate badge color for impact level
@@ -34,10 +44,20 @@ export default function WcagIssuesList({ issues }) {
         }
     };
 
+    // Get appropriate badge color for conformance level
+    const getLevelColor = (level) => {
+        switch (level) {
+            case 'A': return 'danger';
+            case 'AA': return 'warning';
+            case 'AAA': return 'info';
+            default: return 'secondary';
+        }
+    };
+
     return (
         <div>
             <div className="row mb-4">
-                <div className="col-md-6">
+                <div className="col-md-4">
                     <div className="input-group">
                         <span className="input-group-text">
                             <i className="fas fa-search"></i>
@@ -51,7 +71,7 @@ export default function WcagIssuesList({ issues }) {
                         />
                     </div>
                 </div>
-                <div className="col-md-6">
+                <div className="col-md-4">
                     <div className="btn-group w-100">
                         <button
                             className={`btn ${filter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
@@ -77,11 +97,33 @@ export default function WcagIssuesList({ issues }) {
                         >
                             Moderate ({counts.moderate})
                         </button>
+                    </div>
+                </div>
+                <div className="col-md-4">
+                    <div className="btn-group w-100">
                         <button
-                            className={`btn ${filter === 'minor' ? 'btn-secondary' : 'btn-outline-secondary'}`}
-                            onClick={() => setFilter('minor')}
+                            className={`btn ${levelFilter === 'all' ? 'btn-primary' : 'btn-outline-primary'}`}
+                            onClick={() => setLevelFilter('all')}
                         >
-                            Minor ({counts.minor})
+                            All Levels
+                        </button>
+                        <button
+                            className={`btn ${levelFilter === 'A' ? 'btn-danger' : 'btn-outline-danger'}`}
+                            onClick={() => setLevelFilter('A')}
+                        >
+                            A ({levelCounts.A})
+                        </button>
+                        <button
+                            className={`btn ${levelFilter === 'AA' ? 'btn-warning' : 'btn-outline-warning'}`}
+                            onClick={() => setLevelFilter('AA')}
+                        >
+                            AA ({levelCounts.AA})
+                        </button>
+                        <button
+                            className={`btn ${levelFilter === 'AAA' ? 'btn-info' : 'btn-outline-info'}`}
+                            onClick={() => setLevelFilter('AAA')}
+                        >
+                            AAA ({levelCounts.AAA})
                         </button>
                     </div>
                 </div>
@@ -97,10 +139,10 @@ export default function WcagIssuesList({ issues }) {
                         <thead>
                             <tr>
                                 <th>Impact</th>
+                                <th>Level</th>
                                 <th>Description</th>
                                 <th>WCAG Criterion</th>
                                 <th>Location</th>
-                                <th>Count</th>
                                 <th>Element</th>
                             </tr>
                         </thead>
@@ -112,10 +154,15 @@ export default function WcagIssuesList({ issues }) {
                                             {issue.impact}
                                         </span>
                                     </td>
+                                    <td>
+                                        <span className={`badge bg-${getLevelColor(issue.conformance_level)}`}>
+                                            {issue.conformance_level || 'A'}
+                                        </span>
+                                    </td>
                                     <td>{issue.description}</td>
                                     <td>
                                         <a
-                                            href={`https://www.w3.org/WAI/WCAG21/Understanding/${issue.wcag_criterion.replace('.', '-')}`}
+                                            href={`https://www.w3.org/WAI/WCAG21/Understanding/${issue.wcag_criterion.split(', ')[0].replace('.', '-')}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                         >
@@ -123,7 +170,6 @@ export default function WcagIssuesList({ issues }) {
                                         </a>
                                     </td>
                                     <td>{issue.location}</td>
-                                    <td>{issue.count}</td>
                                     <td>
                                         <code className="small">{issue.element}</code>
                                     </td>

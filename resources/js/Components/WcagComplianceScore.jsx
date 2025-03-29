@@ -17,6 +17,16 @@ export default function WcagComplianceScore({ score }) {
         return 'Critical';
     };
 
+    // Determine WCAG conformance level based on score
+    const getConformanceLevel = () => {
+        if (score >= 95) return { level: 'AAA', color: 'info' };
+        if (score >= 85) return { level: 'AA', color: 'warning' };
+        if (score >= 70) return { level: 'A', color: 'danger' };
+        return { level: 'Non-conformant', color: 'secondary' };
+    };
+
+    const conformance = getConformanceLevel();
+
     return (
         <div className="card h-100">
             <div className="card-body text-center">
@@ -28,6 +38,11 @@ export default function WcagComplianceScore({ score }) {
                     <h4 className={`text-${getScoreColor()} mt-2`}>
                         {getScoreMessage()}
                     </h4>
+                    <div className="mt-3">
+                        <span className={`badge bg-${conformance.color} fs-6 p-2`}>
+                            WCAG 2.1 {conformance.level}
+                        </span>
+                    </div>
                 </div>
                 <p className="card-text">
                     {score >= 90 ? (
