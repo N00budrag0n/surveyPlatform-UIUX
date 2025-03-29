@@ -69,6 +69,7 @@ Route::group(['middleware' => 'cors'], function () {
             Route::get('/responses/sus/{id}/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
             Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
             Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
+            Route::get('/responses/wcag_test/{id}/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
 
             Route::resource('/roles', \App\Http\Controllers\Account\RoleController::class, ['as' => 'account'])
                 ->middleware('permission:roles.index|roles.create|roles.edit|roles.delete');
@@ -98,6 +99,10 @@ Route::group(['middleware' => 'cors'], function () {
                 ->middleware('permission:ab_test.index|ab_test.index.full')->name('account.ab_test');
             Route::get('/ab_test/{id}', [\App\Http\Controllers\Account\AbTestController::class, 'show'])
                 ->middleware('permission:ab_test.index|ab_test.index.full|ab_test.statistics|ab_test.charts|ab_test.responses|ab_test.export')->name('account.ab_test.id');
+            Route::get('/wcag_test', [\App\Http\Controllers\Account\WcagTestController::class, 'index'])
+                ->middleware('permission:wcag_test.index|wcag_test.index.full')->name('account.wcag_test');
+            Route::get('/wcag_test/{id}', [\App\Http\Controllers\Account\WcagTestController::class, 'show'])
+                ->middleware('permission:wcag_test.index|wcag_test.index.full|wcag_test.statistics|wcag_test.charts|wcag_test.responses|wcag_test.export')->name('account.wcag_test.id');
         });
     });
 });

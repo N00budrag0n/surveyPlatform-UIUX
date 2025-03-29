@@ -50,6 +50,14 @@ class PermissionsTableSeeder extends Seeder
         Permission::create(['name' => 'ab_test.responses', 'guard_name' => 'web']);
         Permission::create(['name' => 'ab_test.export', 'guard_name' => 'web']);
 
+        // permission wcag_test result
+        Permission::create(['name' => 'wcag_test.index', 'guard_name' => 'web']);
+        Permission::create(['name' => 'wcag_test.index.full', 'guard_name' => 'web']);
+        Permission::create(['name' => 'wcag_test.statistics', 'guard_name' => 'web']);
+        Permission::create(['name' => 'wcag_test.charts', 'guard_name' => 'web']);
+        Permission::create(['name' => 'wcag_test.responses', 'guard_name' => 'web']);
+        Permission::create(['name' => 'wcag_test.export', 'guard_name' => 'web']);
+
         //permission surveys
         Permission::create(['name' => 'surveys.index', 'guard_name' => 'web']);
         Permission::create(['name' => 'surveys.index.full', 'guard_name' => 'web']);
