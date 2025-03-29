@@ -62,6 +62,18 @@ export default function Sidebar() {
                         <i className="fa fa-poll-h me-2"></i> A/B Testing Results
                     </Link>
                 )}
+                {hasAnyPermission(["wcag_test.index", "wcag_test.index.full"]) && (
+                    <Link
+                        href="/account/wcag_test"
+                        className={`${
+                            url.startsWith("/account/wcag_test")
+                                ? "active list-group-item list-group-item-action list-group-item-light p-3"
+                                : "list-group-item list-group-item-action list-group-item-light p-3"
+                        }`}
+                    >
+                        <i className="fa fa-poll-h me-2"></i> WCAG Testing Results
+                    </Link>
+                )}
 
 
                 {hasAnyPermission(["surveys.index", "surveys.index.full"]) && (
