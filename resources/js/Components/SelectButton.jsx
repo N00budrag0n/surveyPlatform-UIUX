@@ -24,7 +24,7 @@ const SelectButton = ({
                             backgroundColor: selectedValues.includes(
                                 option[valueKey]
                             )
-                                ? "#8F4030"
+                                ? "var(--nav-color)"
                                 : "white",
                             color: selectedValues.includes(option[valueKey])
                                 ? "white"
