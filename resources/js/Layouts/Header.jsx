@@ -329,15 +329,16 @@ export default function Layout({ children }) {
                                     </li>
                                     <li className="nav-item ms-2">
                                         <Link
-                                            className="nav-link btn px-4 py-2 rounded-pill"
+                                            className="btn btn px-4 py-2 rounded-pill"
                                             href="/register"
                                             style={{
                                                 background: "#ffffff",
-                                                color: "var(--nav-color)",
+                                                color: "#23445C",
                                                 fontWeight: "600",
                                                 transition: "all 0.3s ease",
                                                 boxShadow:
                                                     "0 4px 6px rgba(0, 0, 0, 0.1)",
+                                                textDecoration: "none"
                                             }}
                                             onMouseOver={(e) => {
                                                 e.currentTarget.style.background =
