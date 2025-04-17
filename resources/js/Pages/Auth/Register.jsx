@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Layout from "../../Layouts/Header";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import AuthField from "../../Components/AuthField";
@@ -17,6 +16,7 @@ export default function Register() {
     const [educationalBackground, setEducationalBackground] = useState("");
     const [password, setPassword] = useState("");
     const [passwordConfirmation, setPasswordConfirmation] = useState("");
+
     const registerHandler = async (e) => {
         e.preventDefault();
 
@@ -36,32 +36,50 @@ export default function Register() {
     return (
         <>
             <Head>
-                <title>Register Account - Survey Platform</title>
+                <title>Register Account - UIX-Probe</title>
             </Head>
-            <Layout footerVisible={false}>
-                <div className="container">
+
+            <div
+                className="min-vh-100 d-flex align-items-center justify-content-center"
+                style={{
+                    background:
+                        "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                    padding: "20px",
+                }}
+            >
+                <div className="container py-5">
                     <div className="row justify-content-center">
-                        <div className="col-md-6 mt-80">
+                        <div className="col-md-8 col-lg-7">
                             <div className="text-center mb-4">
-                                <img
-                                    src="/assets/images/logo.png"
-                                    width={"60"}
-                                />
-                                <h4>
-                                    <h4>
-                                        <strong>Survey</strong>{" "}
-                                        <small>Platform</small>
-                                    </h4>
+                                <Link href="/">
+                                    <img
+                                        src="/assets/images/logo.png"
+                                        width="70"
+                                        alt="Logo"
+                                        className="mb-2"
+                                    />
+                                </Link>
+                                <h4 className="mb-0">
+                                    <strong
+                                        style={{ color: "var(--nav-color)" }}
+                                    >
+                                        UIX-Probe
+                                    </strong>{" "}
                                 </h4>
                             </div>
-                            <div className="card border-0 rounded-3 shadow-sm border-top">
-                                <div className="card-body">
-                                    <div className="text-center">
-                                        <h6 className="fw-bold">
-                                            REGISTER ACCOUNT
-                                        </h6>
-                                        <hr />
+
+                            <div className="card border-0 rounded-4 shadow">
+                                <div className="card-body p-4 p-md-5">
+                                    <div className="text-center mb-4">
+                                        <h5 className="fw-bold">
+                                            Create Your Account
+                                        </h5>
+                                        <p className="text-muted small">
+                                            Fill in your information to get
+                                            started
+                                        </p>
                                     </div>
+
                                     <form onSubmit={registerHandler}>
                                         <div className="row">
                                             <div className="col-md-6">
@@ -75,7 +93,7 @@ export default function Register() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="First Name"
+                                                    placeholder="Enter first name"
                                                     error={errors.firstName}
                                                     required
                                                 />
@@ -92,7 +110,7 @@ export default function Register() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="Surname"
+                                                    placeholder="Enter surname"
                                                     error={errors.surname}
                                                     required
                                                 />
@@ -107,7 +125,7 @@ export default function Register() {
                                             onChange={(e) =>
                                                 setEmail(e.target.value)
                                             }
-                                            placeholder="Email Address"
+                                            placeholder="Enter email address"
                                             error={errors.email}
                                             required
                                         />
@@ -195,7 +213,7 @@ export default function Register() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="Password"
+                                                    placeholder="Create password"
                                                     error={errors.password}
                                                     required
                                                 />
@@ -203,7 +221,7 @@ export default function Register() {
                                             <div className="col-md-6">
                                                 <AuthField
                                                     icon="fa fa-lock"
-                                                    label="Password Confirmation"
+                                                    label="Confirm Password"
                                                     type="password"
                                                     value={passwordConfirmation}
                                                     onChange={(e) =>
@@ -211,28 +229,57 @@ export default function Register() {
                                                             e.target.value
                                                         )
                                                     }
-                                                    placeholder="Password Confirmation"
+                                                    placeholder="Confirm password"
                                                     required
                                                 />
                                             </div>
                                         </div>
+
                                         <button
-                                            className="btn btn-style shadow-sm rounded-sm px-4 w-100"
+                                            className="btn w-100 py-2 mt-3"
                                             type="submit"
+                                            style={{
+                                                background: "var(--nav-color)",
+                                                color: "#ffffff",
+                                                fontWeight: "600",
+                                                borderRadius: "8px",
+                                            }}
                                         >
-                                            Next
+                                            Create Account
                                         </button>
+
+                                        <div className="text-center mt-4">
+                                            <p className="mb-0 small">
+                                                Already have an account?{" "}
+                                                <Link
+                                                    href="/login"
+                                                    className="text-decoration-none fw-semibold"
+                                                    style={{
+                                                        color: "var(--nav-color)",
+                                                    }}
+                                                >
+                                                    Sign In
+                                                </Link>
+                                            </p>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
-                            <div className="register text-center mt-3">
-                                Have an account?{" "}
-                                <Link href="/login">Login</Link>
+
+                            <div className="text-center mt-4">
+                                <Link
+                                    href="/"
+                                    className="text-decoration-none small"
+                                    style={{ color: "var(--nav-color)" }}
+                                >
+                                    <i className="fas fa-arrow-left me-1"></i>{" "}
+                                    Back to Home
+                                </Link>
                             </div>
                         </div>
                     </div>
                 </div>
-            </Layout>
+            </div>
         </>
     );
 }
