@@ -4,6 +4,8 @@ import { createInertiaApp } from "@inertiajs/inertia-react";
 import { InertiaProgress } from "@inertiajs/progress";
 import { resolvePageComponent } from "laravel-vite-plugin/inertia-helpers";
 // import "../css/app.css";
+import "../css/custom.css";
+import "../css/animation.css";
 
 createInertiaApp({
     resolve: (name) =>
@@ -18,5 +20,5 @@ createInertiaApp({
 
 InertiaProgress.init({
     delay: 1,
-    color: "#ffffff",
+    color: "#3B82F6",
 });

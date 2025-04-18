@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import Layout from "../../Layouts/Header";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import AuthField from "../../Components/AuthField";
@@ -24,30 +23,49 @@ export default function Login() {
     return (
         <>
             <Head>
-                <title>Login Account - Survey Platform</title>
+                <title>Login Account - UIX-Probe</title>
             </Head>
-            <Layout footerVisible={false}>
+
+            <div
+                className="min-vh-100 d-flex align-items-center justify-content-center"
+                style={{
+                    background:
+                        "linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)",
+                    padding: "20px",
+                }}
+            >
                 <div className="container">
                     <div className="row justify-content-center">
-                        <div className="col-md-6 mt-80">
+                        <div className="col-md-5 col-lg-4">
                             <div className="text-center mb-4">
-                                <img
-                                    src="/assets/images/logo.png"
-                                    width={"60"}
-                                />
-                                <h4>
-                                    <strong>Survey</strong>{" "}
-                                    <small>Platform</small>
+                                <Link href="/">
+                                    <img
+                                        src="/assets/images/logo.png"
+                                        width="70"
+                                        alt="Logo"
+                                        className="mb-2"
+                                    />
+                                </Link>
+                                <h4 className="mb-0">
+                                    <strong
+                                        style={{ color: "var(--nav-color)" }}
+                                    >
+                                        UIX-Probe
+                                    </strong>{" "}
                                 </h4>
                             </div>
-                            <div className="card border-0 rounded-3 shadow-sm border-top">
-                                <div className="card-body">
-                                    <div className="text-center">
-                                        <h6 className="fw-bold">
-                                            LOGIN ACCOUNT
-                                        </h6>
-                                        <hr />
+
+                            <div className="card border-0 rounded-4 shadow">
+                                <div className="card-body p-4 p-md-5">
+                                    <div className="text-center mb-4">
+                                        <h5 className="fw-bold">
+                                            Welcome Back
+                                        </h5>
+                                        <p className="text-muted small">
+                                            Sign in to your account to continue
+                                        </p>
                                     </div>
+
                                     <form onSubmit={loginHandler}>
                                         <AuthField
                                             icon="fa fa-envelope"
@@ -57,9 +75,10 @@ export default function Login() {
                                             onChange={(e) =>
                                                 setEmail(e.target.value)
                                             }
-                                            placeholder="Email Address"
+                                            placeholder="Enter your email"
                                             error={errors.email}
                                         />
+
                                         <AuthField
                                             icon="fa fa-lock"
                                             label="Password"
@@ -68,12 +87,13 @@ export default function Login() {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
-                                            placeholder="Password"
+                                            placeholder="Enter your password"
                                             error={errors.password}
                                         />
-                                        <div className="row mb-3">
-                                            <div className="col-6 d-flex">
-                                                <div>
+
+                                        <div className="row mb-4">
+                                            <div className="col-6 d-flex align-items-center">
+                                                <div className="form-check">
                                                     <input
                                                         type="checkbox"
                                                         className="form-check-input"
@@ -85,35 +105,72 @@ export default function Login() {
                                                             )
                                                         }
                                                     />
-                                                    <label className="ms-2">
+                                                    <label
+                                                        className="form-check-label ms-2 small"
+                                                        htmlFor="rememberMe"
+                                                    >
                                                         Remember Me
                                                     </label>
                                                 </div>
                                             </div>
-                                            <div className="col-6 d-flex flex-column align-items-end">
-                                                <Link href="/forgot-password">
-                                                    Forgot Password
+                                            <div className="col-6 d-flex justify-content-end align-items-center">
+                                                <Link
+                                                    href="/forgot-password"
+                                                    className="small text-decoration-none"
+                                                    style={{
+                                                        color: "var(--nav-color)",
+                                                    }}
+                                                >
+                                                    Forgot Password?
                                                 </Link>
                                             </div>
                                         </div>
 
                                         <button
-                                            className="btn btn-style shadow-sm rounded-sm px-4 w-100"
+                                            className="btn w-100 py-2 mb-3"
                                             type="submit"
+                                            style={{
+                                                background: "var(--nav-color)",
+                                                color: "#ffffff",
+                                                fontWeight: "600",
+                                                borderRadius: "8px",
+                                            }}
                                         >
-                                            LOGIN
+                                            Sign In
                                         </button>
+
+                                        <div className="text-center mt-4">
+                                            <p className="mb-0 small">
+                                                Don't have an account?{" "}
+                                                <Link
+                                                    href="/register"
+                                                    className="text-decoration-none fw-semibold"
+                                                    style={{
+                                                        color: "var(--nav-color)",
+                                                    }}
+                                                >
+                                                    Sign Up
+                                                </Link>
+                                            </p>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
-                            <div className="register text-center mt-3">
-                                Need an account?{" "}
-                                <Link href="/register">Register</Link>
+
+                            <div className="text-center mt-4">
+                                <Link
+                                    href="/"
+                                    className="text-decoration-none small"
+                                    style={{ color: "var(--nav-color)" }}
+                                >
+                                    <i className="fas fa-arrow-left me-1"></i>{" "}
+                                    Back to Home
+                                </Link>
                             </div>
                         </div>
                     </div>
                 </div>
-            </Layout>
+            </div>
         </>
     );
 }

@@ -17,6 +17,24 @@
     --btn-color: #753427;
     --table-odd-color: #F2F2F2;
     --table-even-color: #ffffff;
+
+    /* new var */
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --primary-light: rgba(59, 130, 246, 0.1);
+    --primary-dark: #1D4ED8;
+    --secondary-color: #64748B;
+    --success-color: #10B981;
+    --danger-color: #EF4444;
+    --warning-color: #F59E0B;
+    --info-color: #3B82F6;
+    --text-dark: #1E293B;
+    --text-light: #F8FAFC;
+    --text-muted: #64748B;
+    --border-color: #E2E8F0;
+    --border-radius: 0.5rem;
+    --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --transition-speed: 0.3s;
 }
 
 body.light {
@@ -35,24 +53,127 @@ body.light {
     --btn-color: #77868d;
     --table-odd-color: #F2F2F2;
     --table-even-color: #ffffff;
+
+    /* theme specific overrides */
+    --primary-color: #3B82F6;
+    --primary-hover: #2563EB;
+    --primary-light: rgba(59, 130, 246, 0.1);
+}
+
+/* Add these new classes for enhanced UI components */
+.card-hover {
+    transition: transform var(--transition-speed), box-shadow var(--transition-speed);
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--box-shadow);
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover, .btn-primary:focus {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+}
+
+.text-primary {
+    color: var(--primary-color) !important;
+}
+
+.bg-primary {
+    background-color: var(--primary-color) !important;
+}
+
+.border-primary {
+    border-color: var(--primary-color) !important;
+}
+
+.rounded-custom {
+    border-radius: var(--border-radius);
+}
+
+.transition-all {
+    transition: all var(--transition-speed) ease;
+}
+
+/* Navbar specific styles */
+.navbar {
+    background-color: var(--nav-color) !important;
+}
+
+.navbar .nav-link {
+    color: var(--font-color2) !important;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+.navbar .nav-link:hover {
+    color: rgba(255, 255, 255, 1) !important;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+.navbar .navbar-brand {
+    color: var(--font-color2) !important;
+    font-weight: 700;
+}
+
+/* Add animation classes */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate__fadeInUp {
+    animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate__delay-1s {
+    animation-delay: 0.2s;
+}
+
+.animate__delay-2s {
+    animation-delay: 0.4s;
+}
+
+.animate__fadeIn {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }
 
 body.dark {
-    --bg-color: #121212;  
+    --bg-color: #121212;
     --bg-color2: #3b4f52;
-    --bg-icon: #445353;        
+    --bg-icon: #445353;
     --nav-color: #5d6363;
-    --bg-sidebar-color: #192122; 
-    --bg-sidebar-color-active: #454c4c;        
-    --title-color: #ffffff;      
+    --bg-sidebar-color: #192122;
+    --bg-sidebar-color-active: #454c4c;
+    --title-color: #ffffff;
     --font-color: #e0e0e0;
-    --font-color2: #ffffff;        
-    --card-color: #2e3637;       
+    --font-color2: #ffffff;
+    --card-color: #2e3637;
     --card-color2: #3F3F3F;
     --card-color3: #292947;
-    --btn-color: #64888f;     
-    --table-odd-color: #5d6363;  
-    --table-even-color: #454c4c; 
+    --btn-color: #64888f;
+    --table-odd-color: #5d6363;
+    --table-even-color: #454c4c;
 }
 
 body.warm {
@@ -96,13 +217,13 @@ body {
 .card-custom .icon-wrapper {
     width: 60px;
     height: 60px;
-    background-color: var(--bg-icon); 
+    background-color: var(--bg-icon);
 }
 
 .card-custom .card-body {
-    background-color: var(--card-color2); 
-    padding-top: 5rem; 
-    margin-top: 4rem; 
+    background-color: var(--card-color2);
+    padding-top: 5rem;
+    margin-top: 4rem;
     text-align: center;
 }
 
@@ -477,7 +598,7 @@ html:not([dir="rtl"]) .mfe-3 {
 
 .dropdown-item:hover {
     color: white;
-    background-color: #198754; 
+    background-color: #198754;
     background-color: #8f4030;
     border-radius: 5px;
 } */
