@@ -45,7 +45,7 @@ export default function LayoutAccount({ children }) {
                                 width={"50"}
                                 alt="Logo"
                             />
-                            <strong>Survey</strong> <small>Platform</small>
+                            <strong>UIX-Probe</strong>
                         </Link>
                     </div>
                     <Sidebar />
@@ -71,6 +71,36 @@ export default function LayoutAccount({ children }) {
                                             Home
                                         </Link>
                                     </li>
+                                    <div
+                                        className="rounded-circle overflow-hidden me-2 d-flex align-items-center justify-content-center"
+                                        style={{
+                                            width: "38px",
+                                            height: "38px",
+                                            background:
+                                                "rgba(255, 255, 255, 0.2)",
+                                            border: "2px solid rgba(255, 255, 255, 0.5)",
+                                        }}
+                                    >
+                                        {auth.avatar ? (
+                                            <img
+                                                src={auth.avatar}
+                                                className="img-fluid"
+                                                alt={auth.first_name}
+                                            />
+                                        ) : (
+                                            <span
+                                                style={{
+                                                    color: "#ffffff",
+                                                    fontWeight: "bold",
+                                                    fontSize: "16px",
+                                                }}
+                                            >
+                                                {auth.user.first_name
+                                                    .charAt(0)
+                                                    .toUpperCase()}
+                                            </span>
+                                        )}
+                                    </div>
                                     <NavDropdown
                                         title={
                                             <>
@@ -99,7 +129,7 @@ export default function LayoutAccount({ children }) {
                                             Logout
                                         </NavDropdown.Item>
                                     </NavDropdown>
-                                    <ThemeMode />
+                                    {/* <ThemeMode /> */}
                                 </ul>
                             </div>
                         </div>
