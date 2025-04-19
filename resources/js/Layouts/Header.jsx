@@ -71,7 +71,7 @@ export default function Layout({ children }) {
                         }`}
                     >
                         <ul className="navbar-nav ms-auto mb-2 mb-lg-0">
-                            <li className="nav-item mx-1">
+                            <li className="nav-item mx-1 d-flex align-items-center">
                                 <Link
                                     className="nav-link px-3 py-2 rounded-pill"
                                     href="/"
@@ -96,7 +96,7 @@ export default function Layout({ children }) {
                                     Home
                                 </Link>
                             </li>
-                            <li className="nav-item mx-1">
+                            <li className="nav-item mx-1 d-flex align-items-center">
                                 <Link
                                     className="nav-link px-3 py-2 rounded-pill"
                                     href="/surveys"
@@ -121,7 +121,7 @@ export default function Layout({ children }) {
                                     Surveys
                                 </Link>
                             </li>
-                            <li className="nav-item mx-1">
+                            <li className="nav-item mx-1 d-flex align-items-center">
                                 <Link
                                     className="nav-link px-3 py-2 rounded-pill"
                                     href="/articles"
@@ -146,7 +146,7 @@ export default function Layout({ children }) {
                                     Articles
                                 </Link>
                             </li>
-                            <li className="nav-item mx-1">
+                            <li className="nav-item mx-1 d-flex align-items-center">
                                 <Link
                                     className="nav-link px-3 py-2 rounded-pill"
                                     href="/categories"
@@ -171,9 +171,9 @@ export default function Layout({ children }) {
                                     Categories
                                 </Link>
                             </li>
-                            <li className="nav-item mx-1">
+                            <li className="nav-item mx-1 d-flex align-items-center">
                                 <Link
-                                    className="nav-link px-3 py-2 rounded-pill"
+                                    className="nav-link px-3 py-2 rounded-pill "
                                     href="/about"
                                     style={{
                                         transition: "all 0.3s ease",
@@ -236,14 +236,14 @@ export default function Layout({ children }) {
                                                             fontSize: "16px",
                                                         }}
                                                     >
-                                                        {auth.name
+                                                        {auth.first_name
                                                             .charAt(0)
                                                             .toUpperCase()}
                                                     </span>
                                                 )}
                                             </div>
                                             <span className="d-none d-md-inline">
-                                                {auth.name}
+                                                {auth.first_name + " " + auth.surname}
                                             </span>
                                         </a>
                                         <ul
