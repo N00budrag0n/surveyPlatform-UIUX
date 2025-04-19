@@ -230,15 +230,15 @@ export default function Layout({ children }) {
                                                     />
                                                 ) : (
                                                     <span
-                                                        // style={{
-                                                        //     color: "#ffffff",
-                                                        //     fontWeight: "bold",
-                                                        //     fontSize: "16px",
-                                                        // }}
+                                                        style={{
+                                                            color: "#ffffff",
+                                                            fontWeight: "bold",
+                                                            fontSize: "16px",
+                                                        }}
                                                     >
-                                                        {/* {auth.name
+                                                        {auth.first_name
                                                             .charAt(0)
-                                                            .toUpperCase()} */}
+                                                            .toUpperCase()}
                                                     </span>
                                                 )}
                                             </div>
