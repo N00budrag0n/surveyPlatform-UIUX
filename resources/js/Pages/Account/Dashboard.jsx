@@ -30,7 +30,7 @@ export default function Dashboard() {
     return (
         <>
             <Head>
-                <title>Dashboard - SurveyPlatform</title>
+                <title>Dashboard - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="m-3">

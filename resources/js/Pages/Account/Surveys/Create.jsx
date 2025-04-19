@@ -451,7 +451,7 @@ export default function SurveysCreate() {
     return (
         <>
             <Head>
-                <title>Create Survey - Survey Platform</title>
+                <title>Create Survey - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Create Survey" icon="fas fa-scroll">

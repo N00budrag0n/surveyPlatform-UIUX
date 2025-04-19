@@ -9,7 +9,7 @@ export default function About() {
     return (
         <>
             <Head>
-                <title>About - Survey Platform</title>
+                <title>About - UIX-Probe</title>
             </Head>
             <Layout>
                 <div className="container mt-80 mb-5">

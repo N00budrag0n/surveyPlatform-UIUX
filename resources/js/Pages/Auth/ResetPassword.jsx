@@ -34,7 +34,7 @@ export default function ResetPassword({ auth, token, email }) {
     return (
         <>
             <Head>
-                <title>Reset Password - Survey Platform</title>
+                <title>Reset Password - UIX-Probe</title>
             </Head>
             <Layout footerVisible={false}>
                 <div className="container">

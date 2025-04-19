@@ -70,7 +70,7 @@ export default function CategoryEdit() {
     return (
         <>
             <Head>
-                <title>Edit Category - Survey Platform</title>
+                <title>Edit Category - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Edit Category" icon="fa fa-folder">

@@ -13,7 +13,7 @@ export default function SurveyIndex() {
     return (
         <>
             <Head>
-                <title>Surveys - Survey Platform</title>
+                <title>Surveys - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">

@@ -88,7 +88,7 @@ export default function ArticleCreate() {
     return (
         <>
             <Head>
-                <title>Edit Articles - Survey Platform</title>
+                <title>Edit Articles - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Edit Articles" icon="fa fa-newspaper">

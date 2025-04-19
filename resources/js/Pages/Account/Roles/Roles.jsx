@@ -11,7 +11,7 @@ export default function RoleIndex() {
     return (
         <>
             <Head>
-                <title>Roles - Survey Platform</title>
+                <title>Roles - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">
