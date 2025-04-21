@@ -108,11 +108,11 @@ export default function Dashboard() {
     const handleExport = () => {
         window.location.href = `/account/responses/sus/${survey.id}/export`;
     };
-    
+
     return (
         <>
             <Head>
-                <title>SUS Result - SurveyPlatform</title>
+                <title>SUS Result - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="m-3">

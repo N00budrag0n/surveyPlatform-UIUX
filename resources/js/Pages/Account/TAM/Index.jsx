@@ -116,7 +116,7 @@ export default function Dashboard() {
     return (
         <>
             <Head>
-                <title>TAM Result - Survey Platform</title>
+                <title>TAM Result - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="m-3">

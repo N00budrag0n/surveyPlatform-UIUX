@@ -5,6 +5,7 @@ import Layout from "../../Layouts/Header";
 import SurveyDescription from "../../Components/SurveyDescription";
 import LikertScale from "../../Components/LikertScale";
 import EmbedDesign from "../../Components/EmbedDesign";
+import AccordionLayout from "../../Layouts/Accordion";
 import Swal from "sweetalert2";
 
 function Form() {
@@ -444,27 +445,69 @@ function Form() {
                                                 (methodId, index) => {
                                                     if (methodId == 1) {
                                                         return (
-                                                            <div
-                                                                className="card border-0 rounded-4 shadow-sm mb-4"
-                                                                key={index}
-                                                            >
-                                                                <div className="card-body p-4">
-                                                                    <h5 className="fw-bold mb-4">
-                                                                        <i
-                                                                            className="fas fa-tasks me-2"
-                                                                            style={{
-                                                                                color: "var(--nav-color)",
-                                                                            }}
-                                                                        ></i>
-                                                                        System
-                                                                        Usability
-                                                                        Scale
-                                                                        (SUS)
-                                                                    </h5>
-                                                                    <div className="mb-3">
-                                                                        {parsedSusQuestions.map(
+                                                            <AccordionLayout title="System Usability Scale (SUS)">
+                                                                <div
+                                                                    className="card border-0 rounded-4 shadow-sm mb-4"
+                                                                    key={index}
+                                                                >
+                                                                    <div className="card-body p-4">
+                                                                        <div className="mb-3">
+                                                                            {parsedSusQuestions.map(
+                                                                                (
+                                                                                    susQuestion,
+                                                                                    index
+                                                                                ) => (
+                                                                                    <div
+                                                                                        className="mb-4 p-3 rounded-3"
+                                                                                        key={
+                                                                                            index
+                                                                                        }
+                                                                                    >
+                                                                                        <h6 className="fw-semibold">
+                                                                                            {index +
+                                                                                                1}
+
+                                                                                            .{" "}
+                                                                                            {
+                                                                                                susQuestion.question
+                                                                                            }
+                                                                                        </h6>
+                                                                                        <LikertScale
+                                                                                            name={`sus${
+                                                                                                index +
+                                                                                                1
+                                                                                            }`}
+                                                                                            selectedValue={
+                                                                                                susValues[
+                                                                                                    `sus${
+                                                                                                        index +
+                                                                                                        1
+                                                                                                    }`
+                                                                                                ]
+                                                                                            }
+                                                                                            onValueChange={
+                                                                                                handleSUSChange
+                                                                                            }
+                                                                                        />
+                                                                                    </div>
+                                                                                )
+                                                                            )}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </AccordionLayout>
+                                                        );
+                                                    } else if (methodId == 2) {
+                                                        return (
+                                                            <AccordionLayout title="Technology Acceptance Model (TAM)">
+                                                                <div
+                                                                    className="card border-0 rounded-4 shadow-sm mb-4"
+                                                                    key={index}
+                                                                >
+                                                                    <div className="card-body p-4">
+                                                                        {parsedTamQuestions.map(
                                                                             (
-                                                                                susQuestion,
+                                                                                tamQuestion,
                                                                                 index
                                                                             ) => (
                                                                                 <div
@@ -479,24 +522,28 @@ function Form() {
 
                                                                                         .{" "}
                                                                                         {
-                                                                                            susQuestion.question
+                                                                                            tamQuestion.question
                                                                                         }
                                                                                     </h6>
                                                                                     <LikertScale
-                                                                                        name={`sus${
+                                                                                        name={`tam${
                                                                                             index +
                                                                                             1
-                                                                                        }`}
+                                                                                        }-${
+                                                                                            tamQuestion.variable
+                                                                                        }-${tamQuestion.indicator.replace(
+                                                                                            /\s+/g,
+                                                                                            "_"
+                                                                                        )}`}
                                                                                         selectedValue={
-                                                                                            susValues[
-                                                                                                `sus${
-                                                                                                    index +
-                                                                                                    1
-                                                                                                }`
-                                                                                            ]
+                                                                                            tamSelectedValue(
+                                                                                                tamQuestion,
+                                                                                                index
+                                                                                            ) ||
+                                                                                            ""
                                                                                         }
                                                                                         onValueChange={
-                                                                                            handleSUSChange
+                                                                                            handleTAMChange
                                                                                         }
                                                                                     />
                                                                                 </div>
@@ -504,390 +551,314 @@ function Form() {
                                                                         )}
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        );
-                                                    } else if (methodId == 2) {
-                                                        return (
-                                                            <div
-                                                                className="card border-0 rounded-4 shadow-sm mb-4"
-                                                                key={index}
-                                                            >
-                                                                <div className="card-body p-4">
-                                                                    <h5 className="fw-bold mb-4">
-                                                                        <i
-                                                                            className="fas fa-chart-line me-2"
-                                                                            style={{
-                                                                                color: "var(--nav-color)",
-                                                                            }}
-                                                                        ></i>
-                                                                        Technology
-                                                                        Acceptance
-                                                                        Model
-                                                                        (TAM)
-                                                                    </h5>
-                                                                    {parsedTamQuestions.map(
-                                                                        (
-                                                                            tamQuestion,
-                                                                            index
-                                                                        ) => (
-                                                                            <div
-                                                                                className="mb-4 p-3 rounded-3"
-                                                                                key={
-                                                                                    index
-                                                                                }
-                                                                            >
-                                                                                <h6 className="fw-semibold">
-                                                                                    {index +
-                                                                                        1}
-
-                                                                                    .{" "}
-                                                                                    {
-                                                                                        tamQuestion.question
-                                                                                    }
-                                                                                </h6>
-                                                                                <LikertScale
-                                                                                    name={`tam${
-                                                                                        index +
-                                                                                        1
-                                                                                    }-${
-                                                                                        tamQuestion.variable
-                                                                                    }-${tamQuestion.indicator.replace(
-                                                                                        /\s+/g,
-                                                                                        "_"
-                                                                                    )}`}
-                                                                                    selectedValue={
-                                                                                        tamSelectedValue(
-                                                                                            tamQuestion,
-                                                                                            index
-                                                                                        ) ||
-                                                                                        ""
-                                                                                    }
-                                                                                    onValueChange={
-                                                                                        handleTAMChange
-                                                                                    }
-                                                                                />
-                                                                            </div>
-                                                                        )
-                                                                    )}
-                                                                </div>
-                                                            </div>
+                                                            </AccordionLayout>
                                                         );
                                                     } else if (methodId == 3) {
                                                         return (
-                                                            <div
-                                                                className="card border-0 rounded-4 shadow-sm mb-4"
-                                                                key={index}
-                                                            >
-                                                                <div className="card-body p-4">
-                                                                    <h5 className="fw-bold mb-4">
-                                                                        <i
-                                                                            className="fas fa-columns me-2"
-                                                                            style={{
-                                                                                color: "var(--nav-color)",
-                                                                            }}
-                                                                        ></i>
-                                                                        Design
-                                                                        Comparison
-                                                                        (A/B
-                                                                        Testing)
-                                                                    </h5>
-
-                                                                    {parsedAbTestingGroups.map(
-                                                                        (
-                                                                            group,
-                                                                            groupIndex
-                                                                        ) => (
-                                                                            <div
-                                                                                key={
-                                                                                    groupIndex
-                                                                                }
-                                                                                className="card mb-4 border-0 shadow-sm"
-                                                                            >
-                                                                                <div className="card-header bg-light py-3">
-                                                                                    <h6 className="fw-bold mb-1">
-                                                                                        {
-                                                                                            group.name
-                                                                                        }
-                                                                                    </h6>
-                                                                                    {group.description && (
-                                                                                        <p className="text-muted mb-0 small">
+                                                            <AccordionLayout title="AB Testing">
+                                                                <div
+                                                                    className="card border-0 rounded-4 shadow-sm mb-4"
+                                                                    key={index}
+                                                                >
+                                                                    <div className="card-body p-4">
+                                                                        {parsedAbTestingGroups.map(
+                                                                            (
+                                                                                group,
+                                                                                groupIndex
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        groupIndex
+                                                                                    }
+                                                                                    className="card mb-4 border-0 shadow-sm"
+                                                                                >
+                                                                                    <div className="card-header py-3">
+                                                                                        <h6 className="fw-bold mb-1">
                                                                                             {
-                                                                                                group.description
+                                                                                                group.name
                                                                                             }
-                                                                                        </p>
-                                                                                    )}
-                                                                                </div>
-                                                                                <div className="card-body">
-                                                                                    {group.comparisons.map(
-                                                                                        (
-                                                                                            comparison,
-                                                                                            compIndex
-                                                                                        ) => (
-                                                                                            <div
-                                                                                                key={
-                                                                                                    comparison.id
+                                                                                        </h6>
+                                                                                        {group.description && (
+                                                                                            <p className="text-muted mb-0 small">
+                                                                                                {
+                                                                                                    group.description
                                                                                                 }
-                                                                                                className="mb-4 pb-4 border-bottom"
-                                                                                            >
-                                                                                                <h6 className="mb-3 fw-semibold">
-                                                                                                    {
-                                                                                                        comparison.title
+                                                                                            </p>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <div className="card-body">
+                                                                                        {group.comparisons.map(
+                                                                                            (
+                                                                                                comparison,
+                                                                                                compIndex
+                                                                                            ) => (
+                                                                                                <div
+                                                                                                    key={
+                                                                                                        comparison.id
                                                                                                     }
-                                                                                                </h6>
+                                                                                                    className="mb-4 pb-4 border-bottom"
+                                                                                                >
+                                                                                                    <h6 className="mb-3 fw-semibold">
+                                                                                                        {
+                                                                                                            (compIndex+1) + ". " +
+                                                                                                            comparison.title
+                                                                                                        }
+                                                                                                    </h6>
 
-                                                                                                <div className="row g-4">
-                                                                                                    <div className="col-md-6">
-                                                                                                        <div
-                                                                                                            className={`card h-100 mb-3 ${
-                                                                                                                getAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id
-                                                                                                                ) ===
-                                                                                                                "a"
-                                                                                                                    ? "border-primary"
-                                                                                                                    : "border"
-                                                                                                            }`}
-                                                                                                            onClick={() =>
-                                                                                                                handleAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id,
+                                                                                                    <div className="row g-4">
+                                                                                                        <div className="col-md-6">
+                                                                                                            <div
+                                                                                                                className={`card h-100 mb-3 ${
+                                                                                                                    getAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id
+                                                                                                                    ) ===
                                                                                                                     "a"
-                                                                                                                )
-                                                                                                            }
-                                                                                                            style={{
-                                                                                                                cursor: "pointer",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <div className="position-relative">
-                                                                                                                <img
-                                                                                                                    className="card-img-top"
-                                                                                                                    src={`/storage/image/ab_testing/${comparison.variant_a.image}`}
-                                                                                                                    alt={
-                                                                                                                        comparison
-                                                                                                                            .variant_a
-                                                                                                                            .title
-                                                                                                                    }
-                                                                                                                    style={{
-                                                                                                                        maxHeight:
-                                                                                                                            "200px",
-                                                                                                                        objectFit:
-                                                                                                                            "contain",
-                                                                                                                    }}
-                                                                                                                />
-                                                                                                                {getAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id
-                                                                                                                ) ===
-                                                                                                                    "a" && (
-                                                                                                                    <div className="position-absolute top-0 end-0 m-2">
-                                                                                                                        <span className="badge bg-primary rounded-pill">
-                                                                                                                            <i className="fas fa-check"></i>{" "}
-                                                                                                                            Selected
-                                                                                                                        </span>
-                                                                                                                    </div>
-                                                                                                                )}
-                                                                                                            </div>
-                                                                                                            <div className="card-body">
-                                                                                                                <h5 className="card-title">
-                                                                                                                    {
-                                                                                                                        comparison
-                                                                                                                            .variant_a
-                                                                                                                            .title
-                                                                                                                    }
-                                                                                                                </h5>
-                                                                                                                <p className="card-text small">
-                                                                                                                    {
-                                                                                                                        comparison
-                                                                                                                            .variant_a
-                                                                                                                            .description
-                                                                                                                    }
-                                                                                                                </p>
-
-                                                                                                                <div className="form-check">
-                                                                                                                    <input
-                                                                                                                        className="form-check-input"
-                                                                                                                        type="radio"
-                                                                                                                        name={`ab_testing_${group.name}_${comparison.id}`}
-                                                                                                                        id={`ab_testing_${group.name}_${comparison.id}_a`}
-                                                                                                                        checked={
-                                                                                                                            getAbTestingSelection(
-                                                                                                                                group.name,
-                                                                                                                                comparison.id
-                                                                                                                            ) ===
-                                                                                                                            "a"
+                                                                                                                        ? "border-primary"
+                                                                                                                        : "border"
+                                                                                                                }`}
+                                                                                                                onClick={() =>
+                                                                                                                    handleAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id,
+                                                                                                                        "a"
+                                                                                                                    )
+                                                                                                                }
+                                                                                                                style={{
+                                                                                                                    cursor: "pointer",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <div className="position-relative">
+                                                                                                                    <img
+                                                                                                                        className="card-img-top"
+                                                                                                                        src={`/storage/image/ab_testing/${comparison.variant_a.image}`}
+                                                                                                                        alt={
+                                                                                                                            comparison
+                                                                                                                                .variant_a
+                                                                                                                                .title
                                                                                                                         }
-                                                                                                                        onChange={() =>
-                                                                                                                            handleAbTestingSelection(
-                                                                                                                                group.name,
-                                                                                                                                comparison.id,
+                                                                                                                        style={{
+                                                                                                                            maxHeight:
+                                                                                                                                "200px",
+                                                                                                                            objectFit:
+                                                                                                                                "contain",
+                                                                                                                        }}
+                                                                                                                    />
+                                                                                                                    {getAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id
+                                                                                                                    ) ===
+                                                                                                                        "a" && (
+                                                                                                                        <div className="position-absolute top-0 end-0 m-2">
+                                                                                                                            <span className="badge bg-primary rounded-pill">
+                                                                                                                                <i className="fas fa-check"></i>{" "}
+                                                                                                                                Selected
+                                                                                                                            </span>
+                                                                                                                        </div>
+                                                                                                                    )}
+                                                                                                                </div>
+                                                                                                                <div className="card-body">
+                                                                                                                    <h5 className="card-title">
+                                                                                                                        {
+                                                                                                                            comparison
+                                                                                                                                .variant_a
+                                                                                                                                .title
+                                                                                                                        }
+                                                                                                                    </h5>
+                                                                                                                    <p className="card-text small">
+                                                                                                                        {
+                                                                                                                            comparison
+                                                                                                                                .variant_a
+                                                                                                                                .description
+                                                                                                                        }
+                                                                                                                    </p>
+
+                                                                                                                    <div className="form-check">
+                                                                                                                        <input
+                                                                                                                            className="form-check-input"
+                                                                                                                            type="radio"
+                                                                                                                            name={`ab_testing_${group.name}_${comparison.id}`}
+                                                                                                                            id={`ab_testing_${group.name}_${comparison.id}_a`}
+                                                                                                                            checked={
+                                                                                                                                getAbTestingSelection(
+                                                                                                                                    group.name,
+                                                                                                                                    comparison.id
+                                                                                                                                ) ===
                                                                                                                                 "a"
-                                                                                                                            )
-                                                                                                                        }
-                                                                                                                    />
-                                                                                                                    <label
-                                                                                                                        className="form-check-label"
-                                                                                                                        htmlFor={`ab_testing_${group.name}_${comparison.id}_a`}
-                                                                                                                    >
-                                                                                                                        Select
-                                                                                                                        Design
-                                                                                                                        A
-                                                                                                                    </label>
-                                                                                                                </div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    </div>
-
-                                                                                                    <div className="col-md-6">
-                                                                                                        <div
-                                                                                                            className={`card h-100 mb-3 ${
-                                                                                                                getAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id
-                                                                                                                ) ===
-                                                                                                                "b"
-                                                                                                                    ? "border-primary"
-                                                                                                                    : "border"
-                                                                                                            }`}
-                                                                                                            onClick={() =>
-                                                                                                                handleAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id,
-                                                                                                                    "b"
-                                                                                                                )
-                                                                                                            }
-                                                                                                            style={{
-                                                                                                                cursor: "pointer",
-                                                                                                            }}
-                                                                                                        >
-                                                                                                            <div className="position-relative">
-                                                                                                                <img
-                                                                                                                    className="card-img-top"
-                                                                                                                    src={`/storage/image/ab_testing/${comparison.variant_b.image}`}
-                                                                                                                    alt={
-                                                                                                                        comparison
-                                                                                                                            .variant_b
-                                                                                                                            .title
-                                                                                                                    }
-                                                                                                                    style={{
-                                                                                                                        maxHeight:
-                                                                                                                            "200px",
-                                                                                                                        objectFit:
-                                                                                                                            "contain",
-                                                                                                                    }}
-                                                                                                                />
-                                                                                                                {getAbTestingSelection(
-                                                                                                                    group.name,
-                                                                                                                    comparison.id
-                                                                                                                ) ===
-                                                                                                                    "b" && (
-                                                                                                                    <div className="position-absolute top-0 end-0 m-2">
-                                                                                                                        <span className="badge bg-primary rounded-pill">
-                                                                                                                            <i className="fas fa-check"></i>{" "}
-                                                                                                                            Selected
-                                                                                                                        </span>
+                                                                                                                            }
+                                                                                                                            onChange={() =>
+                                                                                                                                handleAbTestingSelection(
+                                                                                                                                    group.name,
+                                                                                                                                    comparison.id,
+                                                                                                                                    "a"
+                                                                                                                                )
+                                                                                                                            }
+                                                                                                                        />
+                                                                                                                        <label
+                                                                                                                            className="form-check-label"
+                                                                                                                            htmlFor={`ab_testing_${group.name}_${comparison.id}_a`}
+                                                                                                                        >
+                                                                                                                            Select
+                                                                                                                            Design
+                                                                                                                            A
+                                                                                                                        </label>
                                                                                                                     </div>
-                                                                                                                )}
+                                                                                                                </div>
                                                                                                             </div>
-                                                                                                            <div className="card-body">
-                                                                                                                <h5 className="card-title">
-                                                                                                                    {
-                                                                                                                        comparison
-                                                                                                                            .variant_b
-                                                                                                                            .title
-                                                                                                                    }
-                                                                                                                </h5>
-                                                                                                                <p className="card-text small">
-                                                                                                                    {
-                                                                                                                        comparison
-                                                                                                                            .variant_b
-                                                                                                                            .description
-                                                                                                                    }
-                                                                                                                </p>
+                                                                                                        </div>
 
-                                                                                                                <div className="form-check">
-                                                                                                                    <input
-                                                                                                                        className="form-check-input"
-                                                                                                                        type="radio"
-                                                                                                                        name={`ab_testing_${group.name}_${comparison.id}`}
-                                                                                                                        id={`ab_testing_${group.name}_${comparison.id}_b`}
-                                                                                                                        checked={
-                                                                                                                            getAbTestingSelection(
-                                                                                                                                group.name,
-                                                                                                                                comparison.id
-                                                                                                                            ) ===
-                                                                                                                            "b"
+                                                                                                        <div className="col-md-6">
+                                                                                                            <div
+                                                                                                                className={`card h-100 mb-3 ${
+                                                                                                                    getAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id
+                                                                                                                    ) ===
+                                                                                                                    "b"
+                                                                                                                        ? "border-primary"
+                                                                                                                        : "border"
+                                                                                                                }`}
+                                                                                                                onClick={() =>
+                                                                                                                    handleAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id,
+                                                                                                                        "b"
+                                                                                                                    )
+                                                                                                                }
+                                                                                                                style={{
+                                                                                                                    cursor: "pointer",
+                                                                                                                }}
+                                                                                                            >
+                                                                                                                <div className="position-relative">
+                                                                                                                    <img
+                                                                                                                        className="card-img-top"
+                                                                                                                        src={`/storage/image/ab_testing/${comparison.variant_b.image}`}
+                                                                                                                        alt={
+                                                                                                                            comparison
+                                                                                                                                .variant_b
+                                                                                                                                .title
                                                                                                                         }
-                                                                                                                        onChange={() =>
-                                                                                                                            handleAbTestingSelection(
-                                                                                                                                group.name,
-                                                                                                                                comparison.id,
-                                                                                                                                "b"
-                                                                                                                            )
-                                                                                                                        }
+                                                                                                                        style={{
+                                                                                                                            maxHeight:
+                                                                                                                                "200px",
+                                                                                                                            objectFit:
+                                                                                                                                "contain",
+                                                                                                                        }}
                                                                                                                     />
-                                                                                                                    <label
-                                                                                                                        className="form-check-label"
-                                                                                                                        htmlFor={`ab_testing_${group.name}_${comparison.id}_b`}
-                                                                                                                    >
-                                                                                                                        Select
-                                                                                                                        Design
-                                                                                                                        B
-                                                                                                                    </label>
+                                                                                                                    {getAbTestingSelection(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id
+                                                                                                                    ) ===
+                                                                                                                        "b" && (
+                                                                                                                        <div className="position-absolute top-0 end-0 m-2">
+                                                                                                                            <span className="badge bg-primary rounded-pill">
+                                                                                                                                <i className="fas fa-check"></i>{" "}
+                                                                                                                                Selected
+                                                                                                                            </span>
+                                                                                                                        </div>
+                                                                                                                    )}
+                                                                                                                </div>
+                                                                                                                <div className="card-body">
+                                                                                                                    <h5 className="card-title">
+                                                                                                                        {
+                                                                                                                            comparison
+                                                                                                                                .variant_b
+                                                                                                                                .title
+                                                                                                                        }
+                                                                                                                    </h5>
+                                                                                                                    <p className="card-text small">
+                                                                                                                        {
+                                                                                                                            comparison
+                                                                                                                                .variant_b
+                                                                                                                                .description
+                                                                                                                        }
+                                                                                                                    </p>
+
+                                                                                                                    <div className="form-check">
+                                                                                                                        <input
+                                                                                                                            className="form-check-input"
+                                                                                                                            type="radio"
+                                                                                                                            name={`ab_testing_${group.name}_${comparison.id}`}
+                                                                                                                            id={`ab_testing_${group.name}_${comparison.id}_b`}
+                                                                                                                            checked={
+                                                                                                                                getAbTestingSelection(
+                                                                                                                                    group.name,
+                                                                                                                                    comparison.id
+                                                                                                                                ) ===
+                                                                                                                                "b"
+                                                                                                                            }
+                                                                                                                            onChange={() =>
+                                                                                                                                handleAbTestingSelection(
+                                                                                                                                    group.name,
+                                                                                                                                    comparison.id,
+                                                                                                                                    "b"
+                                                                                                                                )
+                                                                                                                            }
+                                                                                                                        />
+                                                                                                                        <label
+                                                                                                                            className="form-check-label"
+                                                                                                                            htmlFor={`ab_testing_${group.name}_${comparison.id}_b`}
+                                                                                                                        >
+                                                                                                                            Select
+                                                                                                                            Design
+                                                                                                                            B
+                                                                                                                        </label>
+                                                                                                                    </div>
                                                                                                                 </div>
                                                                                                             </div>
                                                                                                         </div>
                                                                                                     </div>
-                                                                                                </div>
 
-                                                                                                {getAbTestingSelection(
-                                                                                                    group.name,
-                                                                                                    comparison.id
-                                                                                                ) && (
-                                                                                                    <div className="form-group mt-3">
-                                                                                                        <label
-                                                                                                            htmlFor={`ab_testing_reason_${group.name}_${comparison.id}`}
-                                                                                                            className="form-label fw-semibold"
-                                                                                                        >
-                                                                                                            Why
-                                                                                                            did
-                                                                                                            you
-                                                                                                            choose
-                                                                                                            this
-                                                                                                            design?
-                                                                                                            (Optional)
-                                                                                                        </label>
-                                                                                                        <textarea
-                                                                                                            className="form-control"
-                                                                                                            id={`ab_testing_reason_${group.name}_${comparison.id}`}
-                                                                                                            rows="2"
-                                                                                                            value={getAbTestingReason(
-                                                                                                                group.name,
-                                                                                                                comparison.id
-                                                                                                            )}
-                                                                                                            onChange={(
-                                                                                                                e
-                                                                                                            ) =>
-                                                                                                                handleAbTestingReason(
+                                                                                                    {getAbTestingSelection(
+                                                                                                        group.name,
+                                                                                                        comparison.id
+                                                                                                    ) && (
+                                                                                                        <div className="form-group mt-3">
+                                                                                                            <label
+                                                                                                                htmlFor={`ab_testing_reason_${group.name}_${comparison.id}`}
+                                                                                                                className="form-label fw-semibold"
+                                                                                                            >
+                                                                                                                Why
+                                                                                                                did
+                                                                                                                you
+                                                                                                                choose
+                                                                                                                this
+                                                                                                                design?
+                                                                                                                (Optional)
+                                                                                                            </label>
+                                                                                                            <textarea
+                                                                                                                className="form-control"
+                                                                                                                id={`ab_testing_reason_${group.name}_${comparison.id}`}
+                                                                                                                rows="2"
+                                                                                                                value={getAbTestingReason(
                                                                                                                     group.name,
-                                                                                                                    comparison.id,
+                                                                                                                    comparison.id
+                                                                                                                )}
+                                                                                                                onChange={(
                                                                                                                     e
-                                                                                                                        .target
-                                                                                                                        .value
-                                                                                                                )
-                                                                                                            }
-                                                                                                            placeholder="Please explain your choice..."
-                                                                                                        ></textarea>
-                                                                                                    </div>
-                                                                                                )}
-                                                                                            </div>
-                                                                                        )
-                                                                                    )}
+                                                                                                                ) =>
+                                                                                                                    handleAbTestingReason(
+                                                                                                                        group.name,
+                                                                                                                        comparison.id,
+                                                                                                                        e
+                                                                                                                            .target
+                                                                                                                            .value
+                                                                                                                    )
+                                                                                                                }
+                                                                                                                placeholder="Please explain your choice..."
+                                                                                                            ></textarea>
+                                                                                                        </div>
+                                                                                                    )}
+                                                                                                </div>
+                                                                                            )
+                                                                                        )}
+                                                                                    </div>
                                                                                 </div>
-                                                                            </div>
-                                                                        )
-                                                                    )}
+                                                                            )
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                            </div>
+                                                            </AccordionLayout>
                                                         );
                                                     } else {
                                                         return (

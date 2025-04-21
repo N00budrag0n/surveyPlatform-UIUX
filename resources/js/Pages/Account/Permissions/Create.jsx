@@ -61,7 +61,7 @@ export default function CategoryCreate() {
     return (
         <>
             <Head>
-                <title>Create Permissions - Survey Platform</title>
+                <title>Create Permissions - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Create Permissions" icon="fas fa-passport">

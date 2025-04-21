@@ -76,7 +76,7 @@ export default function RoleCreate() {
     return (
         <>
             <Head>
-                <title>Create Roles - Survey Platform</title>
+                <title>Create Roles - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Create Roles" icon="fa fa-shield-alt">

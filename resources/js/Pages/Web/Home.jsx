@@ -35,7 +35,7 @@ export default function Home() {
     return (
         <>
             <Head>
-                <title>UIX-Probe - UI/UX Testing Platform</title>
+                <title>UI/UX Testing Platform - UIX-Probe</title>
                 <meta
                     name="description"
                     content="Platform pengujian UI/UX terbaik untuk meningkatkan pengalaman pengguna aplikasi Anda."

@@ -106,7 +106,7 @@ export default function UserCreate() {
     return (
         <>
             <Head>
-                <title>Create Users - Survey Platform</title>
+                <title>Create Users - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Create Users" icon="fa fa-user-plus">

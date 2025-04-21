@@ -120,7 +120,7 @@ export default function UserEdit() {
     return (
         <>
             <Head>
-                <title>Edit Users - Survey Platform</title>
+                <title>Edit Users - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Edit User" icon="fas fa-user">

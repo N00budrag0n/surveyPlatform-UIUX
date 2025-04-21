@@ -455,7 +455,7 @@ export default function SurveyEdit() {
     return (
         <>
             <Head>
-                <title>Edit Survey - Survey Platform</title>
+                <title>Edit Survey - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent

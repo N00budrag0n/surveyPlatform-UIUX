@@ -13,7 +13,7 @@ export default function articleIndex() {
     return (
         <>
             <Head>
-                <title>Articles - Survey Platform</title>
+                <title>Articles - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">

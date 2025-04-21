@@ -13,7 +13,7 @@ export default function CategoryIndex() {
     return (
         <>
             <Head>
-                <title>Categories - Survey Platform</title>
+                <title>Categories - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">

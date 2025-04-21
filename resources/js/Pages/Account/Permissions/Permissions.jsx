@@ -13,7 +13,7 @@ export default function PermissionIndex() {
     return (
         <>
             <Head>
-                <title>Permissions - Survey Platform</title>
+                <title>Permissions - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">

@@ -67,7 +67,7 @@ export default function CategoryCreate() {
     return (
         <>
             <Head>
-                <title>Create Category - Survey Platform</title>
+                <title>Create Category - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Create Category" icon="fas fa-folder-plus">

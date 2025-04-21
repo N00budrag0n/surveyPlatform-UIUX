@@ -166,7 +166,7 @@ export default function Certificates() {
     return (
         <>
             <Head>
-                <title>Certificates - Survey Platform</title>
+                <title>Certificates - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <AccordionLayout

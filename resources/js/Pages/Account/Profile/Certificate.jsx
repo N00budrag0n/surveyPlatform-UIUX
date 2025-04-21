@@ -64,7 +64,7 @@ export default function ProfileCertificate() {
     return (
         <>
             <Head>
-                <title>Create Users - Survey Platform</title>
+                <title>Create Users - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Upload Certificate">

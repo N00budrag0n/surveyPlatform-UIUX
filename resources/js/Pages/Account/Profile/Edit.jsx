@@ -104,7 +104,7 @@ export default function ProfileEdit() {
     return (
         <>
             <Head>
-                <title>Create Users - Survey Platform</title>
+                <title>Create Users - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Profile">

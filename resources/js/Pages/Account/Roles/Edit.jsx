@@ -92,7 +92,7 @@ export default function RoleEdit() {
     return (
         <>
             <Head>
-                <title>Edit Roles - Survey Platform</title>
+                <title>Edit Roles - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <CardContent title="Edit Role" icon="fa fa-shield-alt">

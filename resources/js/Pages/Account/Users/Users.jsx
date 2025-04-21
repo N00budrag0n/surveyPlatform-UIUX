@@ -13,7 +13,7 @@ export default function UserIndex() {
     return (
         <>
             <Head>
-                <title>Users - Survey Platform</title>
+                <title>Users - UIX-Probe</title>
             </Head>
             <LayoutAccount>
                 <div className="row mt-5">
