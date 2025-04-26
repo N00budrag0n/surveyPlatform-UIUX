@@ -112,18 +112,6 @@ export default function Home() {
                             </div>
                         </div>
                     </div>
-                    <div
-                        className="position-absolute"
-                        style={{
-                            width: "300px",
-                            height: "300px",
-                            background: "var(--primary-light)",
-                            borderRadius: "50%",
-                            bottom: "-150px",
-                            right: "-100px",
-                            zIndex: "0",
-                        }}
-                    ></div>
                 </div>
 
                 {/* Features Section */}
