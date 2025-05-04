@@ -3,6 +3,7 @@
 /public/build
 /public/hot
 /accessibility-testing/node_modules
+/text-analysis-service/node_modules
 # /public/storage
 /storage/*.key
 /vendor

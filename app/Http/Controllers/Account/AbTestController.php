@@ -11,9 +11,17 @@ use App\Models\SurveyQuestions;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ResponsesABTestExport;
 use Illuminate\Support\Facades\Cache;
+use App\Services\TextAnalysisService;
 
 class AbTestController extends Controller
 {
+    protected $textAnalysisService;
+
+    public function __construct(TextAnalysisService $textAnalysisService)
+    {
+        $this->textAnalysisService = $textAnalysisService;
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -205,7 +213,7 @@ class AbTestController extends Controller
             }
         }
 
-        // Calculate percentages
+        // Calculate percentages and add analysis
         foreach ($results as $groupName => $comparisons) {
             foreach ($comparisons as $comparisonId => $data) {
                 if ($data['total'] > 0) {
@@ -214,6 +222,78 @@ class AbTestController extends Controller
                 } else {
                     $results[$groupName][$comparisonId]['a_percentage'] = 0;
                     $results[$groupName][$comparisonId]['b_percentage'] = 0;
+                }
+
+                // Add theme analysis based on votes and reason counts
+                if ((count($data['reasons_a']) >= 2 || count($data['reasons_b']) >= 2)) {
+                    // Determine which variant to analyze based on vote counts
+                    if ($data['a'] > $data['b']) {
+                        // Variant A has more votes
+                        if (count($data['reasons_a']) >= 2) {
+                            $themeAnalysis = $this->textAnalysisService->summarizeReasons($data['reasons_a']);
+                            if ($themeAnalysis) {
+                                $results[$groupName][$comparisonId]['theme_analysis'] = [
+                                    'variant_a' => $themeAnalysis,
+                                    'single_variant' => true,
+                                    'analyzed_variant' => 'a'
+                                ];
+                            }
+                        }
+                    } elseif ($data['b'] > $data['a']) {
+                        // Variant B has more votes
+                        if (count($data['reasons_b']) >= 2) {
+                            $themeAnalysis = $this->textAnalysisService->summarizeReasons($data['reasons_b']);
+                            if ($themeAnalysis) {
+                                $results[$groupName][$comparisonId]['theme_analysis'] = [
+                                    'variant_b' => $themeAnalysis,
+                                    'single_variant' => true,
+                                    'analyzed_variant' => 'b'
+                                ];
+                            }
+                        }
+                    } else {
+                        // It's a tie - analyze both if they have enough reasons
+                        if (count($data['reasons_a']) >= 2 && count($data['reasons_b']) >= 2) {
+                            $themeAnalysis = $this->textAnalysisService->extractThemes(
+                                $data['reasons_a'],
+                                $data['reasons_b']
+                            );
+
+                            if ($themeAnalysis) {
+                                $results[$groupName][$comparisonId]['theme_analysis'] = $themeAnalysis;
+                            }
+                        }
+                    }
+                }
+
+                // Add reason summaries if there are enough reasons
+                // if (count($data['reasons_a']) >= 5) {
+                //     $reasonSummaryA = $this->textAnalysisService->summarizeReasons($data['reasons_a']);
+                //     if ($reasonSummaryA) {
+                //         $results[$groupName][$comparisonId]['reason_summary_a'] = $reasonSummaryA;
+                //     }
+                // }
+
+                // if (count($data['reasons_b']) >= 5) {
+                //     $reasonSummaryB = $this->textAnalysisService->summarizeReasons($data['reasons_b']);
+                //     if ($reasonSummaryB) {
+                //         $results[$groupName][$comparisonId]['reason_summary_b'] = $reasonSummaryB;
+                //     }
+                // }
+                // Replace the existing theme analysis code with this simpler approach
+// Add text summaries for reasons
+                if (count($data['reasons_a']) >= 2) {
+                    $textSummaryA = $this->textAnalysisService->generateSummary($data['reasons_a']);
+                    if ($textSummaryA) {
+                        $results[$groupName][$comparisonId]['text_summary_a'] = $textSummaryA;
+                    }
+                }
+
+                if (count($data['reasons_b']) >= 2) {
+                    $textSummaryB = $this->textAnalysisService->generateSummary($data['reasons_b']);
+                    if ($textSummaryB) {
+                        $results[$groupName][$comparisonId]['text_summary_b'] = $textSummaryB;
+                    }
                 }
             }
         }
@@ -253,4 +333,3 @@ class AbTestController extends Controller
         return Excel::download(new ResponsesABTestExport($survey_id), $fileName);
     }
 }
-
