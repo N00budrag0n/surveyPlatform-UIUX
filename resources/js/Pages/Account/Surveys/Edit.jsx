@@ -130,7 +130,7 @@ export default function SurveyEdit() {
     };
 
     useEffect(() => {
-        const { isSusFilled, isTamFilled } =
+        const { isSusFilled, isTamFilled, isAbTestFilled } =
             checkSurveyMethods(surveyMethodsData);
         setIsMethodSusFilled(isSusFilled);
         setIsMethodTamFilled(isTamFilled);
