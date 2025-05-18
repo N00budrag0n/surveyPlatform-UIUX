@@ -31,6 +31,10 @@ class AbTestController extends Controller
                 $query->where('method_id', 3); // A/B Testing method ID
             })
                 ->get(['surveys.id', 'surveys.title']);
+
+            if ($surveyTitles->isEmpty()) {
+                return redirect()->route('account.surveys.create');
+            }
         } else {
             $surveyTitles = Survey::where('user_id', $user->id)
                 ->whereHas('methods', function ($query) {
@@ -64,8 +68,8 @@ class AbTestController extends Controller
 
         if (auth()->user()->hasPermissionTo('ab_test.index.full')) {
             $surveyTitles = Survey::whereHas('methods', function ($query) {
-                    $query->where('method_id', 3);
-                })
+                $query->where('method_id', 3);
+            })
                 ->get(['surveys.id', 'surveys.title']);
         } else {
             $surveyTitles = Survey::where('user_id', $userID)
@@ -281,7 +285,7 @@ class AbTestController extends Controller
                 //     }
                 // }
                 // Replace the existing theme analysis code with this simpler approach
-// Add text summaries for reasons
+                // Add text summaries for reasons
                 if (count($data['reasons_a']) >= 2) {
                     $textSummaryA = $this->textAnalysisService->generateSummary($data['reasons_a']);
                     if ($textSummaryA) {

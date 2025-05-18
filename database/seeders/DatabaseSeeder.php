@@ -25,5 +25,6 @@ class DatabaseSeeder extends Seeder
         $this->call(SurveyHasMethodsSeeder::class);
         $this->call(responsesTableSeeder::class);
         $this->call(ArticlesTableSeeder::class);
+        $this->call(AccessibilitySolutionsSeeder::class);
     }
 }

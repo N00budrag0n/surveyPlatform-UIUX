@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\Survey;
+use App\Models\WcagTestResult;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -10,8 +11,6 @@ use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 
 class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithTitle, ShouldAutoSize, WithStyles
 {
@@ -21,35 +20,25 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
     public function __construct($survey_id)
     {
         $this->survey_id = $survey_id;
-        $survey = Survey::find($survey_id);
 
-        // Get cached WCAG results or run the test again
-        $this->wcagResults = Cache::remember('wcag-test-' . $survey_id, 60 * 24, function () use ($survey) {
-            try {
-                // Call our Node.js accessibility testing service
-                $response = Http::timeout(60)->post('http://localhost:3000/analyze', [
-                    'url' => $survey->url_website,
-                    'standard' => 'wcag21',
-                    'level' => 'aaa' // Test against all levels (A, AA, AAA)
-                ]);
+        // Get the latest test result from the database
+        $latestResult = WcagTestResult::where('survey_id', $survey_id)
+            ->latest()
+            ->first();
 
-                if ($response->successful()) {
-                    return $response->json();
-                } else {
-                    return [
-                        'success' => false,
-                        'error' => 'Failed to analyze website: ' . $response->body(),
-                        'issues' => []
-                    ];
-                }
-            } catch (\Exception $e) {
-                return [
-                    'success' => false,
-                    'error' => 'Failed to analyze website: ' . $e->getMessage(),
-                    'issues' => []
-                ];
-            }
-        });
+        if ($latestResult) {
+            $this->wcagResults = [
+                'issues' => $latestResult->issues_data,
+                'url' => $latestResult->url,
+                'timestamp' => $latestResult->created_at,
+            ];
+        } else {
+            $this->wcagResults = [
+                'issues' => [],
+                'url' => '',
+                'timestamp' => now(),
+            ];
+        }
     }
 
     public function collection()
@@ -68,28 +57,37 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
             'WCAG Criterion',
             'Element',
             'Location',
-            'Failure Summary'
+            'Solution',
+            'Resources'
         ];
     }
 
     public function map($issue): array
     {
+        $resources = '';
+        if (isset($issue['solution']['resources'])) {
+            foreach ($issue['solution']['resources'] as $title => $url) {
+                $resources .= "{$title}: {$url}\n";
+            }
+        }
+
         return [
-            $issue['id'],
-            ucfirst($issue['impact']),
+            $issue['id'] ?? 'N/A',
+            ucfirst($issue['impact'] ?? 'unknown'),
             $issue['conformance_level'] ?? 'A',
-            $issue['description'],
-            $issue['wcag_criterion'],
-            $issue['element'],
-            $issue['location'],
-            $issue['failureSummary'] ?? ''
+            $issue['description'] ?? 'No description',
+            $issue['wcag_criterion'] ?? 'Unknown',
+            $issue['element'] ?? 'Unknown',
+            $issue['location'] ?? 'Unknown',
+            $issue['solution']['description'] ?? 'No solution provided',
+            $resources
         ];
     }
 
     public function title(): string
     {
         $survey = Survey::find($this->survey_id);
-        return 'WCAG Testing - ' . $survey->title;
+        return 'WCAG Testing - ' . ($survey ? $survey->title : 'Unknown');
     }
 
     public function styles(Worksheet $sheet)

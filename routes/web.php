@@ -102,7 +102,9 @@ Route::group(['middleware' => 'cors'], function () {
             Route::get('/wcag_test', [\App\Http\Controllers\Account\WcagTestController::class, 'index'])
                 ->middleware('permission:wcag_test.index|wcag_test.index.full')->name('account.wcag_test');
             Route::get('/wcag_test/{id}', [\App\Http\Controllers\Account\WcagTestController::class, 'show'])
-                ->middleware('permission:wcag_test.index|wcag_test.index.full|wcag_test.statistics|wcag_test.charts|wcag_test.responses|wcag_test.export')->name('account.wcag_test.id');
+                ->middleware('permission:wcag_test.index|wcag_test.index.full')->name('account.wcag_test.id');
+            Route::post('/wcag_test/{id}/retest', [App\Http\Controllers\Account\WcagTestController::class, 'retest'])
+                ->middleware('permission:wcag_test.index|wcag_test.index.full')->name('wcag_test.retest');
         });
     });
 });
