@@ -369,7 +369,7 @@ class WcagTestController extends Controller
         return $levels;
     }
 
-    private function addSolutionsToIssues($issues)
+    public function addSolutionsToIssues($issues)
     {
         // Get the accessibility solutions database
         $solutions = $this->getAccessibilitySolutions();
