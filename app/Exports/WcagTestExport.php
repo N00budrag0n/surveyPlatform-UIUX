@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\Survey;
 use App\Models\WcagTestResult;
+use App\Http\Controllers\Account\WcagTestController;
 use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
@@ -16,10 +17,12 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
 {
     protected $survey_id;
     protected $wcagResults;
+    protected $wcagTestController;
 
     public function __construct($survey_id)
     {
         $this->survey_id = $survey_id;
+        $this->wcagTestController = new WcagTestController();
 
         // Get the latest test result from the database
         $latestResult = WcagTestResult::where('survey_id', $survey_id)
@@ -32,6 +35,10 @@ class WcagTestExport implements FromCollection, WithHeadings, WithMapping, WithT
                 'url' => $latestResult->url,
                 'timestamp' => $latestResult->created_at,
             ];
+
+            $issues = $this->wcagResults['issues'];
+            $issuesWithSolutions = $this->wcagTestController->addSolutionsToIssues($issues);
+            $this->wcagResults['issues'] = $issuesWithSolutions;
         } else {
             $this->wcagResults = [
                 'issues' => [],

@@ -133,14 +133,15 @@ class WcagTestController extends Controller
                 'issues' => $latestResult->issues_data,
             ];
 
-            $complianceScore = $latestResult->compliance_score;
-            $issuesByCategory = $this->categorizeIssuesByPrinciple($wcagResults);
-            $issuesByLevel = $this->categorizeIssuesByLevel($wcagResults);
-
             // Get solutions for the issues
             $issues = $wcagResults['issues'];
             $issuesWithSolutions = $this->addSolutionsToIssues($issues);
             $wcagResults['issues'] = $issuesWithSolutions;
+
+            $complianceScore = $latestResult->compliance_score;
+            $issuesByCategory = $this->categorizeIssuesByPrinciple($wcagResults);
+            $issuesByLevel = $this->categorizeIssuesByLevel($wcagResults);
+
         } else {
             $wcagResults = [
                 'success' => false,
@@ -368,7 +369,7 @@ class WcagTestController extends Controller
         return $levels;
     }
 
-    private function addSolutionsToIssues($issues)
+    public function addSolutionsToIssues($issues)
     {
         // Get the accessibility solutions database
         $solutions = $this->getAccessibilitySolutions();

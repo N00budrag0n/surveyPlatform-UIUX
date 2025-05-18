@@ -860,6 +860,10 @@ function Form() {
                                                                 </div>
                                                             </AccordionLayout>
                                                         );
+                                                    } else if (methodId == 4) {
+                                                        return (
+                                                            ""
+                                                        );
                                                     } else {
                                                         return (
                                                             <div key={index}>
