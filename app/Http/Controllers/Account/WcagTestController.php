@@ -200,7 +200,7 @@ class WcagTestController extends Controller
                 ->with('success', 'Website re-tested successfully!');
         } else {
             return redirect()->route('account.wcag_test.id', ['id' => $id])
-                ->with('error', 'Failed to test website: ' . ($wcagResults['error'] ?? 'Unknown error'));
+                ->withErrors([  'error', 'Failed to test website: ' . ($wcagResults['error'] ?? 'Unknown error')]);
         }
     }
 

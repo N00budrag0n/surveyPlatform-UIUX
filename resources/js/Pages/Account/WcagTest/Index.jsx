@@ -60,7 +60,7 @@ export default function WcagTestIndex() {
                         onError: (errors) => {
                             Swal.fire(
                                 "Testing Failed!",
-                                errors.error ||
+                                errors[1] ||
                                     "An error occurred during testing.",
                                 "error"
                             );
