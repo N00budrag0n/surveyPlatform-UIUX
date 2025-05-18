@@ -24,6 +24,10 @@ class WcagTestController extends Controller
                 $query->where('method_id', 4); // WCAG Testing method ID
             })
                 ->get(['surveys.id', 'surveys.title']);
+
+            if ($surveyTitles->isEmpty()) {
+                return redirect()->route('account.surveys.create');
+            }
         } else {
             $surveyTitles = Survey::where('user_id', $user->id)
                 ->whereHas('methods', function ($query) {
@@ -200,7 +204,7 @@ class WcagTestController extends Controller
                 ->with('success', 'Website re-tested successfully!');
         } else {
             return redirect()->route('account.wcag_test.id', ['id' => $id])
-                ->withErrors([  'error', 'Failed to test website: ' . ($wcagResults['error'] ?? 'Unknown error')]);
+                ->withErrors(['error', 'Failed to test website: ' . ($wcagResults['error'] ?? 'Unknown error')]);
         }
     }
 
