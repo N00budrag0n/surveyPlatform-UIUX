@@ -5,6 +5,8 @@ import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import WcagIssuesList from "../../../Components/WcagIssuesList";
 import WcagHistoricalChart from "../../../Components/WcagHistoricalChart";
+import WcagComplianceScore from "../../../Components/WcagComplianceScore";
+import WcagConformanceLevels from "../../../Components/WcagConformanceLevels";
 import Swal from "sweetalert2";
 
 export default function WcagTestIndex() {
@@ -19,6 +21,7 @@ export default function WcagTestIndex() {
         canRetest,
         lastTestedAt,
     } = usePage().props;
+    console.log(wcagResults);
 
     const handleSurveyChange = (event) => {
         const surveyId = event.target.value;
@@ -201,7 +204,7 @@ export default function WcagTestIndex() {
                                             <div className="mt-3">
                                                 <p className="mb-0">
                                                     {getScoreMessage(
-                                                        complianceScore
+                                                        wcagResults.level
                                                     )}
                                                 </p>
                                             </div>
@@ -211,6 +214,12 @@ export default function WcagTestIndex() {
                             )}
                         </div>
                     </div>
+                    {wcagResults.success && (
+                        <WcagConformanceLevels
+                            issuesByLevel={issuesByLevel}
+                            conformanceLevel={wcagResults.level}
+                        />
+                    )}
 
                     {wcagResults.success && (
                         <>
@@ -329,16 +338,21 @@ function getLevelColor(level) {
     }
 }
 
-function getScoreMessage(score) {
-    if (score >= 90)
-        return "Excellent! Your website demonstrates strong accessibility compliance.";
-    if (score >= 80)
-        return "Good job! Your website has good accessibility, with some room for improvement.";
-    if (score >= 70)
-        return "Acceptable. Your website meets basic accessibility requirements but needs work.";
-    if (score >= 60)
-        return "Poor. Your website has significant accessibility issues that need addressing.";
-    return "Critical. Your website has serious accessibility problems that require immediate attention.";
+function getScoreMessage(conformanceLevel) {
+    console.log()
+    if (conformanceLevel === "Non-conformant") {
+        return "Critical: Level A requirements not met. No WCAG conformance can be claimed.";
+    }
+    if (conformanceLevel === "AAA") {
+        return "Excellent! Your website meets the highest accessibility standards.";
+    }
+    if (conformanceLevel === "AA") {
+        return "Good! Your website meets recommended accessibility standards.";
+    }
+    if (conformanceLevel === "A") {
+        return "Basic compliance achieved, but consider improving to AA level.";
+    }
+    return "Conformance level could not be determined.";
 }
 
 function getCategoryIcon(category) {

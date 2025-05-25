@@ -1,25 +1,37 @@
 import React from "react";
 
-export default function WcagConformanceLevels({ issuesByLevel }) {
+export default function WcagConformanceLevels({ issuesByLevel, conformanceLevel }) {
     const getLevelDescription = (level) => {
         switch (level) {
             case 'A':
-                return 'Level A is the minimum level of conformance. This addresses the most basic accessibility features and the most serious barriers for users with disabilities.';
+                return 'Level A is the minimum level of conformance. These are the most basic accessibility features that must be met for any WCAG conformance. Multiple identical violation recognized as one violation*.';
             case 'AA':
-                return 'Level AA addresses the major, common barriers for users with disabilities. Most organizations aim for AA compliance as it provides good accessibility while being reasonably achievable.';
+                return 'Level AA addresses major barriers for users with disabilities. This is the recommended standard for most websites and is required by many accessibility laws. Multiple identical violation recognized as one violation*.';
             case 'AAA':
-                return 'Level AAA is the highest level of conformance, addressing more nuanced accessibility issues. It\'s often not possible to satisfy all AAA criteria for some content.';
+                return 'Level AAA is the highest level of conformance. It addresses the most comprehensive accessibility requirements but may not be achievable for all content. Multiple identical violation recognized as one violation*.';
             default:
                 return '';
         }
     };
 
-    const getLevelStatus = (level, issues) => {
-        if (!issues || issues.length === 0) {
+    const getLevelStatus = (level, issues, currentConformance) => {
+        const hasIssues = issues && issues.length > 0;
+
+        if (!hasIssues) {
             return {
                 status: 'Compliant',
                 color: 'success',
                 icon: 'check-circle'
+            };
+        }
+
+        // Critical issues always mean non-compliance
+        const criticalIssues = issues.filter(i => i.impact === 'critical').length;
+        if (criticalIssues > 0) {
+            return {
+                status: 'Non-compliant',
+                color: 'danger',
+                icon: 'times-circle'
             };
         }
 
@@ -32,11 +44,9 @@ export default function WcagConformanceLevels({ issuesByLevel }) {
             };
         }
 
-        // For AA and AAA, determine based on number and severity of issues
-        const criticalIssues = issues.filter(i => i.impact === 'critical').length;
+        // For AA and AAA, determine based on severity
         const seriousIssues = issues.filter(i => i.impact === 'serious').length;
-
-        if (criticalIssues > 0) {
+        if (seriousIssues > 0) {
             return {
                 status: 'Non-compliant',
                 color: 'danger',
@@ -44,77 +54,128 @@ export default function WcagConformanceLevels({ issuesByLevel }) {
             };
         }
 
-        if (seriousIssues > 0) {
-            return {
-                status: 'Partially compliant',
-                color: 'warning',
-                icon: 'exclamation-circle'
-            };
-        }
-
         return {
-            status: 'Mostly compliant',
-            color: 'info',
-            icon: 'info-circle'
+            status: 'Minor issues',
+            color: 'warning',
+            icon: 'exclamation-circle'
         };
     };
 
+    const getOverallConformanceMessage = () => {
+        switch (conformanceLevel) {
+            case 'Non-conformant':
+                return {
+                    message: 'Website does not meet WCAG conformance requirements',
+                    color: 'danger',
+                    icon: 'times-circle'
+                };
+            case 'A':
+                return {
+                    message: 'Website meets WCAG Level A conformance',
+                    color: 'info',
+                    icon: 'check-circle'
+                };
+            case 'AA':
+                return {
+                    message: 'Website meets WCAG Level AA conformance',
+                    color: 'warning',
+                    icon: 'check-circle'
+                };
+            case 'AAA':
+                return {
+                    message: 'Website meets WCAG Level AAA conformance',
+                    color: 'success',
+                    icon: 'check-circle'
+                };
+            default:
+                return {
+                    message: 'Conformance level unknown',
+                    color: 'secondary',
+                    icon: 'question-circle'
+                };
+        }
+    };
+
+    const overallStatus = getOverallConformanceMessage();
+
     return (
-        <div className="row">
-            {Object.entries(issuesByLevel).map(([level, issues]) => {
-                const status = getLevelStatus(level, issues);
+        <div>
+            {/* Overall Conformance Status */}
+            <div className="row mb-4">
+                <div className="col-12">
+                    <div className={`alert alert-${overallStatus.color}`}>
+                        <h5 className="alert-heading">
+                            <i className={`fas fa-${overallStatus.icon} me-2`}></i>
+                            Overall WCAG Conformance: {conformanceLevel}
+                        </h5>
+                        <p className="mb-0">{overallStatus.message}</p>
+                        {conformanceLevel === 'Non-conformant' && (
+                            <hr className="my-2" />
+                        )}
+                        {conformanceLevel === 'Non-conformant' && (
+                            <small>
+                                <strong>Important:</strong> WCAG conformance is hierarchical.
+                                Level A requirements must be met before claiming any level of conformance.
+                            </small>
+                        )}
+                    </div>
+                </div>
+            </div>
 
-                return (
-                    <div className="col-md-4 mb-4" key={level}>
-                        <div className="card h-100">
-                            <div className={`card-header bg-${status.color} text-white`}>
-                                <h5 className="mb-0">
-                                    <i className={`fas fa-${status.icon} me-2`}></i>
-                                    WCAG 2.1 Level {level}
-                                </h5>
-                            </div>
-                            <div className="card-body">
-                                <p className="card-text">{getLevelDescription(level)}</p>
+            {/* Individual Level Status */}
+            <div className="row">
+                {Object.entries(issuesByLevel).map(([level, issues]) => {
+                    const status = getLevelStatus(level, issues, conformanceLevel);
 
-                                <div className={`alert alert-${status.color}`}>
-                                    <strong>Status: {status.status}</strong>
-                                    <p className="mb-0">
-                                        {issues.length === 0
-                                            ? 'No issues found at this level.'
-                                            : `Found ${issues.length} issues at this level.`}
-                                    </p>
+                    return (
+                        <div className="col-md-4 mb-4" key={level}>
+                            <div className="card h-100">
+                                <div className={`card-header bg-${status.color} text-white`}>
+                                    <h5 className="mb-0">
+                                        <i className={`fas fa-${status.icon} me-2`}></i>
+                                        WCAG 2.1 Level {level}
+                                    </h5>
                                 </div>
+                                <div className="card-body">
+                                    <p className="card-text">{getLevelDescription(level)}</p>
 
-                                {issues.length > 0 && (
-                                    <div>
-                                        <h6>Top issues to fix:</h6>
-                                        <ul className="list-group">
-                                            {issues.slice(0, 3).map((issue, index) => (
-                                                <li key={index} className="list-group-item">
-                                                    <span className={`badge bg-${getImpactColor(issue.impact)} me-2`}>
-                                                        {issue.impact}
-                                                    </span>
-                                                    {issue.description}
-                                                </li>
-                                            ))}
-                                            {issues.length > 3 && (
-                                                <li className="list-group-item text-center">
-                                                    <button
-                                                        className="btn btn-sm btn-link"
-                                                        onClick={() => document.getElementById('issues-tab').click()}
-                                                    >
-                                                        View {issues.length - 3} more issues
-                                                    </button>
-                                                </li>
-                                            )}
-                                        </ul>
+                                    <div className={`alert alert-${status.color}`}>
+                                        <strong>Status: {status.status}</strong>
+                                        <p className="mb-0">
+                                            {issues.length === 0
+                                                ? 'No issues found at this level.'
+                                                : `Found ${issues.length} issues at this level.`}
+                                        </p>
                                     </div>
-                                )}
+
+                                    {issues.length > 0 && (
+                                        <div>
+                                            <h6>Issues to fix:</h6>
+                                            <ul className="list-group">
+                                                {issues.slice(0, 3).map((issue, index) => (
+                                                    <li key={index} className="list-group-item">
+                                                        <span className={`badge bg-${getImpactColor(issue.impact)} me-2`}>
+                                                            {issue.impact}
+                                                        </span>
+                                                        {issue.description}
+                                                    </li>
+                                                ))}
+                                                {issues.length > 3 && (
+                                                    <li className="list-group-item text-center">
+                                                        <small className="text-muted">
+                                                            +{issues.length - 3} more issues
+                                                        </small>
+                                                    </li>
+                                                )}
+                                            </ul>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
-                );
-            })}
+                    );
+                })}
+            </div>
         </div>
     );
 }
