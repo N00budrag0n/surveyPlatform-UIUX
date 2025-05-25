@@ -99,7 +99,7 @@ class WcagTestController extends Controller
 
             if ($wcagResults['success']) {
                 $complianceScore = $this->calculateComplianceScore($wcagResults);
-                $conformanceLevel = $this->determineConformanceLevel($complianceScore);
+                $conformanceLevel = $this->determineConformanceLevel($wcagResults);
 
                 // Save the results to the database
                 $latestResult = WcagTestResult::create([
@@ -188,7 +188,9 @@ class WcagTestController extends Controller
 
         if ($wcagResults['success']) {
             $complianceScore = $this->calculateComplianceScore($wcagResults);
-            $conformanceLevel = $this->determineConformanceLevel($complianceScore);
+            $conformanceLevel = $this->determineConformanceLevel($wcagResults);
+
+            // dd($complianceScore);
 
             // Save the results to the database
             WcagTestResult::create([
@@ -344,72 +346,110 @@ class WcagTestController extends Controller
     private function calculateComplianceScore($results)
     {
         if (!isset($results['issues']) || !is_array($results['issues']) || empty($results['issues'])) {
-            return 100; // Perfect score if no issues
+            return 100;
         }
 
-        // Count issues by impact and level
-        $issuesByImpact = [
-            'critical' => 0,
-            'serious' => 0,
-            'moderate' => 0,
-            'minor' => 0
-        ];
+        // Filter valid WCAG issues
+        $validIssues = array_filter($results['issues'], function ($issue) {
+            return isset($issue['wcag_criterion']) && !empty(trim($issue['wcag_criterion']));
+        });
 
-        $issuesByLevel = [
-            'A' => 0,
-            'AA' => 0,
-            'AAA' => 0
-        ];
+        if (empty($validIssues)) {
+            return 100;
+        }
 
-        foreach ($results['issues'] as $issue) {
-            $impact = $issue['impact'] ?? 'moderate';
+        // Count issues by level
+        $levelACriteria = [];
+        $levelAACriteria = [];
+        $levelAAACriteria = [];
+
+        foreach ($validIssues as $issue) {
+            $criterion = $issue['wcag_criterion'];
             $level = $issue['conformance_level'] ?? 'A';
 
-            $issuesByImpact[$impact]++;
-            $issuesByLevel[$level]++;
+            switch ($level) {
+                case 'A':
+                    $levelACriteria[] = $criterion;
+                    break;
+                case 'AA':
+                    $levelAACriteria[] = $criterion;
+                    break;
+                case 'AAA':
+                    $levelAAACriteria[] = $criterion;
+                    break;
+            }
         }
 
-        // Calculate weighted score
-        $weights = [
-            'critical' => ['A' => 10, 'AA' => 8, 'AAA' => 5],
-            'serious' => ['A' => 7, 'AA' => 5, 'AAA' => 3],
-            'moderate' => ['A' => 4, 'AA' => 3, 'AAA' => 2],
-            'minor' => ['A' => 2, 'AA' => 1, 'AAA' => 0.5]
-        ];
+        // Get unique failed criteria per level
+        $uniqueLevelAFailures = count(array_unique($levelACriteria));
+        $uniqueLevelAAFailures = count(array_unique($levelAACriteria));
+        $uniqueLevelAAAFailures = count(array_unique($levelAAACriteria));
 
-        $totalWeight = 0;
-        $maxPossibleWeight = 0;
+        // Approximate total criteria per level (based on WCAG 2.1)
+        $totalLevelA = 30;   // Approximate number of Level A criteria
+        $totalLevelAA = 20;  // Approximate number of Level AA criteria
+        $totalLevelAAA = 28; // Approximate number of Level AAA criteria
 
-        foreach ($results['issues'] as $issue) {
-            $impact = $issue['impact'] ?? 'moderate';
-            $level = $issue['conformance_level'] ?? 'A';
+        // Calculate compliance percentage for each level
+        $levelACompliance = (($totalLevelA - $uniqueLevelAFailures) / $totalLevelA) * 100;
+        $levelAACompliance = (($totalLevelAA - $uniqueLevelAAFailures) / $totalLevelAA) * 100;
+        $levelAAACompliance = (($totalLevelAAA - $uniqueLevelAAAFailures) / $totalLevelAAA) * 100;
 
-            $totalWeight += $weights[$impact][$level];
-        }
+        // Overall score is the weighted average, but heavily weighted toward Level A
+        $overallScore = ($levelACompliance * 0.6) + ($levelAACompliance * 0.25) + ($levelAAACompliance * 0.15);
 
-        // Calculate maximum possible weight based on total issues
-        $totalIssues = count($results['issues']);
-        $maxPossibleWeight = $totalIssues * $weights['critical']['A']; // Worst case: all issues are critical level A
-
-        // Calculate score (higher is better)
-        if ($maxPossibleWeight > 0) {
-            $score = 100 - (($totalWeight / $maxPossibleWeight) * 100);
-        } else {
-            $score = 100;
-        }
-
-        return round($score, 1);
+        return round(max($overallScore, 0), 1);
     }
 
-    private function determineConformanceLevel($score)
+
+    private function determineConformanceLevel($results)
     {
-        if ($score >= 95)
-            return 'AAA';
-        if ($score >= 85)
-            return 'AA';
-        if ($score >= 70)
-            return 'A';
-        return 'Non-conformant';
+        if (!isset($results['issues']) || !is_array($results['issues'])) {
+            return 'AAA'; // No issues found
+        }
+
+        // Filter to only valid WCAG issues
+        $validIssues = array_filter($results['issues'], function ($issue) {
+            return isset($issue['wcag_criterion']) && !empty(trim($issue['wcag_criterion']));
+        });
+
+        if (empty($validIssues)) {
+            return 'AAA'; // No valid WCAG issues
+        }
+
+        // dd($validIssues);
+
+        // Check for failures at each level
+        $hasLevelAFailures = false;
+        $hasLevelAAFailures = false;
+        $hasLevelAAAFailures = false;
+
+        foreach ($validIssues as $issue) {
+            $level = $issue['conformance_level'] ?? 'A';
+
+            switch ($level) {
+                case 'A':
+                    $hasLevelAFailures = true;
+                    break;
+                case 'AA':
+                    $hasLevelAAFailures = true;
+                    break;
+                case 'AAA':
+                    $hasLevelAAAFailures = true;
+                    break;
+            }
+        }
+
+        // Determine conformance level based on WCAG rules
+        if ($hasLevelAFailures) {
+            return 'Non-conformant'; // Any Level A failure = no conformance
+        } elseif ($hasLevelAAFailures) {
+            return 'A'; // Level A passes, but Level AA fails
+        } elseif ($hasLevelAAAFailures) {
+            return 'AA'; // Level A & AA pass, but Level AAA fails
+        } else {
+            return 'AAA'; // All levels pass
+        }
     }
 
     private function categorizeIssuesByPrinciple($results)
