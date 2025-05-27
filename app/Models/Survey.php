@@ -43,6 +43,18 @@ class Survey extends Model
         return $this->belongsToMany(Category::class, 'survey_has_categories', 'survey_id', 'category_id');
     }
 
+    // AI relationship
+    public function aiRecommendations()
+    {
+        return $this->hasMany(SurveyAiRecommendation::class);
+    }
+
+    // Helper method to get AI recommendation by method type
+    public function getAiRecommendation($methodType)
+    {
+        return $this->aiRecommendations()->where('method_type', $methodType)->first();
+    }
+
     protected function image(): Attribute
     {
         return Attribute::make(
