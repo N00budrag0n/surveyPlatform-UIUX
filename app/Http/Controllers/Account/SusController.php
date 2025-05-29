@@ -14,10 +14,20 @@ use App\Exports\ResponsesSUSExport;
 use App\Models\SurveyResponses;
 use App\Models\Survey;
 use App\Models\SurveyQuestions;
+use App\Models\SurveyAiRecommendation;
+use App\Services\GroqService;
 use Psy\Readline\Hoa\Console;
 
 class SusController extends Controller
 {
+
+    protected $groqService;
+
+    public function __construct(GroqService $groqService)
+    {
+        $this->groqService = $groqService;
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -44,7 +54,6 @@ class SusController extends Controller
 
         return redirect()->route('account.sus.id', ['id' => $lowestTitleId]);
     }
-
 
     public function show(Request $request, $id)
     {
@@ -89,6 +98,9 @@ class SusController extends Controller
         $getAverageAnswer = $this->getAverageAnswer($susSurveyResults);
         $getResumeDescription = $this->getResumeDescription($getAverageAnswer, $surveyTheme);
 
+        // Get AI recommendation if exists
+        $aiRecommendation = $survey->getAiRecommendation('SUS');
+
         return inertia('Account/SUS/Index', [
             'surveyTitles' => $surveyTitles,
             'survey' => $survey,
@@ -100,8 +112,69 @@ class SusController extends Controller
             'classifySUSGrade' => $classifySUSGrade,
             'getSUSChartData' => $getSUSChartData,
             'susSurveyResults' => $susSurveyResults,
-            'susQuestions' => $susQuestions
+            'susQuestions' => $susQuestions,
+            'aiRecommendation' => $aiRecommendation
         ])->with('currentSurveyTitle', $survey->title);
+    }
+
+    public function generateAiRecommendation(Request $request, $id)
+    {
+        try {
+            $survey = Survey::findOrFail($id);
+
+            // Check authorization
+            if (!auth()->user()->hasPermissionTo('sus.index.full') && $survey->user_id != auth()->id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // Get survey data for analysis
+            $responses = SurveyResponses::where('survey_id', $id)
+                ->where('response_data', 'LIKE', '%"sus"%')
+                ->get();
+
+            if ($responses->isEmpty()) {
+                return response()->json(['error' => 'Tidak ada data respons untuk dianalisis'], 400);
+            }
+
+            // Calculate analysis data
+            $susSurveyResults = $this->getSUSResults($responses);
+            $getAverageAnswer = $this->getAverageAnswer($susSurveyResults);
+            $getResumeDescription = $this->getResumeDescription($getAverageAnswer, $survey->theme);
+
+            if (!$getResumeDescription) {
+                return response()->json(['error' => 'Tidak dapat menghasilkan deskripsi resume'], 400);
+            }
+
+            // Generate AI recommendation
+            $aiRecommendation = $this->groqService->generateSurveyRecommendation(
+                'SUS',
+                $getResumeDescription,
+                $survey->theme
+            );
+
+            // Save or update AI recommendation
+            SurveyAiRecommendation::updateOrCreate(
+                [
+                    'survey_id' => $id,
+                    'method_type' => 'SUS'
+                ],
+                [
+                    'resume_description' => $getResumeDescription,
+                    'ai_recommendation' => $aiRecommendation,
+                    'generated_at' => now()
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'recommendation' => $aiRecommendation,
+                'generated_at' => now()->format('d/m/Y H:i')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('SUS AI Recommendation Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat menghasilkan rekomendasi'], 500);
+        }
     }
 
     private function demographicRespondents($responses)

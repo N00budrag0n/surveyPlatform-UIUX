@@ -8,12 +8,22 @@ use Illuminate\Support\Carbon;
 use App\Models\SurveyResponses;
 use App\Models\Survey;
 use App\Models\SurveyQuestions;
+use App\Models\SurveyAiRecommendation;
+use App\Services\GroqService;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\ResponsesTAMExport;
 use Illuminate\Support\Facades\Cache;
 
 class TamController extends Controller
 {
+
+    protected $groqService;
+
+    public function __construct(GroqService $groqService)
+    {
+        $this->groqService = $groqService;
+    }
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -122,6 +132,9 @@ class TamController extends Controller
         $calculateRegression = $this->getCalculateRegression($respondents, $responses);
         $getResumeDescription = $this->getResumeDescription($calculateRegression, $surveyTheme);
 
+        // Get AI recommendation if exists
+        $aiRecommendation = $survey->getAiRecommendation('TAM');
+
         return inertia('Account/TAM/Index', [
             'surveyTitles' => $surveyTitles,
             'survey' => $survey,
@@ -133,8 +146,78 @@ class TamController extends Controller
             'calculateRegression' => $calculateRegression,
             'tamSurveyResults' => $tamSurveyResults,
             'tamQustions' => $tamQustions,
-            'resumeDescription' => $getResumeDescription
+            'resumeDescription' => $getResumeDescription,
+            'aiRecommendation' => $aiRecommendation
         ])->with('currentSurveyTitle', $survey->title);
+    }
+
+     public function generateAiRecommendation(Request $request, $id)
+    {
+        try {
+            $survey = Survey::findOrFail($id);
+
+            // Check authorization
+            if (!auth()->user()->hasPermissionTo('tam.index.full') && $survey->user_id != auth()->id()) {
+                return response()->json(['error' => 'Unauthorized'], 403);
+            }
+
+            // Get survey data for analysis
+            $responses = SurveyResponses::where('survey_id', $id)
+                ->where('response_data', 'LIKE', '%"tam"%')
+                ->get();
+
+            if ($responses->isEmpty()) {
+                return response()->json(['error' => 'Tidak ada data respons untuk dianalisis'], 400);
+            }
+
+            // Calculate analysis data
+            $respondents = $this->countRespondents($id, $responses);
+            $calculateRegression = $this->getCalculateRegression($respondents, $responses);
+            $getResumeDescription = $this->getResumeDescription($calculateRegression, $survey->theme);
+
+            if (!$getResumeDescription) {
+                return response()->json(['error' => 'Tidak dapat menghasilkan deskripsi resume'], 400);
+            }
+
+            // Convert resume description array to string for AI analysis
+            $resumeDescriptionText = '';
+            foreach ($getResumeDescription as $category => $sentences) {
+                $resumeDescriptionText .= "\n{$category}:\n";
+                foreach ($sentences as $sentence) {
+                    $resumeDescriptionText .= "- {$sentence}\n";
+                }
+            }
+
+            // Generate AI recommendation
+            $aiRecommendation = $this->groqService->generateSurveyRecommendation(
+                'TAM',
+                $resumeDescriptionText,
+                $survey->theme
+            );
+
+            // Save or update AI recommendation
+            SurveyAiRecommendation::updateOrCreate(
+                [
+                    'survey_id' => $id,
+                    'method_type' => 'TAM'
+                ],
+                [
+                    'resume_description' => $resumeDescriptionText,
+                    'ai_recommendation' => $aiRecommendation,
+                    'generated_at' => now()
+                ]
+            );
+
+            return response()->json([
+                'success' => true,
+                'recommendation' => $aiRecommendation,
+                'generated_at' => now()->format('d/m/Y H:i')
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('TAM AI Recommendation Error: ' . $e->getMessage());
+            return response()->json(['error' => 'Terjadi kesalahan saat menghasilkan rekomendasi'], 500);
+        }
     }
 
     private function countRespondents($surveyId, $responsesFormated)
