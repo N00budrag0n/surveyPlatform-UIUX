@@ -49,6 +49,10 @@ Route::group(['middleware' => 'cors'], function () {
         Route::group(['middleware' => ['auth']], function () {
             Route::get('/dashboard', [App\Http\Controllers\Account\DashboardController::class, 'index'])->name('account.dashboard');
 
+            // AI Recommendation for SUS and TAM
+            Route::post('/sus/{id}/ai-recommendation', [\App\Http\Controllers\Account\SusController::class, 'generateAiRecommendation'])->name('sus.ai-recommendation');
+            Route::post('/tam/{id}/ai-recommendation', [\App\Http\Controllers\Account\TamController::class, 'generateAiRecommendation'])->name('tam.ai-recommendation');
+
             Route::resource('profile', \App\Http\Controllers\Account\ProfileController::class, ['as' => 'account'])->only(['index', 'edit', 'update'])
                 ->middleware('permission:profile.index|profile.edit');
             Route::get('profile/certificate', [\App\Http\Controllers\Account\ProfileController::class, 'certificate'])
