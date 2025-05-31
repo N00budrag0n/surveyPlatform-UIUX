@@ -7,38 +7,30 @@ use Illuminate\Support\Facades\Log;
 
 class GroqService
 {
-    private $apiKey;
-    private $apiUrl;
-
-    public function __construct()
-    {
-        $this->apiKey = config('services.groq.api_key');
-        $this->apiUrl = config('services.groq.api_url');
-    }
+    protected $baseUrl = 'https://api.groq.com/openai/v1/chat/completions';
 
     public function generateSurveyRecommendation($methodType, $resumeDescription, $surveyTheme)
     {
         try {
             $prompt = $this->buildRecommendationPrompt($methodType, $resumeDescription, $surveyTheme);
 
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $this->apiKey,
-                'Content-Type' => 'application/json',
-            ])->timeout(60)->post($this->apiUrl, [
-                        'model' => 'mixtral-8x7b-32768',
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => 'Anda adalah seorang ahli UX/UI dan peneliti pengalaman pengguna yang berpengalaman. Berikan analisis mendalam, solusi praktis, dan rekomendasi yang dapat ditindaklanjuti dalam bahasa Indonesia yang profesional dan mudah dipahami.'
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => $prompt
-                            ]
+            $response = Http::withToken(env('GROQ_API_KEY'))
+                ->timeout(60)
+                ->post($this->baseUrl, [
+                    'model' => 'mixtral-8x7b-32768',
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => 'Anda adalah seorang ahli UX/UI dan peneliti pengalaman pengguna yang berpengalaman. Berikan analisis mendalam, solusi praktis, dan rekomendasi yang dapat ditindaklanjuti dalam bahasa Indonesia yang profesional dan mudah dipahami.'
                         ],
-                        'max_tokens' => 3000,
-                        'temperature' => 0.7
-                    ]);
+                        [
+                            'role' => 'user',
+                            'content' => $prompt
+                        ]
+                    ],
+                    'max_tokens' => 3000,
+                    'temperature' => 0.7
+                ]);
 
             if ($response->successful()) {
                 return $response->json()['choices'][0]['message']['content'];
