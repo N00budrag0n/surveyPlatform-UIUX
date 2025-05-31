@@ -26,6 +26,7 @@
         "react-datepicker": "^4.20.0",
         "react-dom": "^18.2.0",
         "react-dropzone": "^14.2.3",
+        "react-markdown": "^10.1.0",
         "react-quill": "^2.0.0",
         "sweetalert2": "^11.7.27"
     }
