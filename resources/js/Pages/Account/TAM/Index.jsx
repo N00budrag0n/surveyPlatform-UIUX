@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
+import ReactMarkdown from 'react-markdown';
 import hasAnyPermission from "../../../Utils/Permissions";
 import LayoutAccount from "../../../Layouts/Account";
 import CardContent from "../../../Layouts/CardContent";
@@ -339,7 +340,9 @@ export default function Dashboard() {
                                         lineHeight: '1.6'
                                     }}
                                 >
-                                    {aiResult}
+                                    <ReactMarkdown>
+                                        {aiResult}
+                                    </ReactMarkdown>
                                 </div>
                             </div>
                         ) : (
