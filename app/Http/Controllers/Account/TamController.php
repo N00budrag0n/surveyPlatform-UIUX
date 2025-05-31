@@ -151,7 +151,7 @@ class TamController extends Controller
         ])->with('currentSurveyTitle', $survey->title);
     }
 
-     public function generateAiRecommendation(Request $request, $id)
+    public function generateAiRecommendation(Request $request, $id)
     {
         try {
             $survey = Survey::findOrFail($id);
@@ -605,14 +605,54 @@ class TamController extends Controller
         return $tamSurveyResults;
     }
 
-    public function export($survey_id)
+    public function export(Request $request)
     {
-        $survey = Survey::find($survey_id);
-        $surveyName = $survey->title;
-        $dateTime = now()->format('Y-m-d H.i');
-        $dateTimeFormatted = str_replace(' ', '-', $dateTime);
-        $fileName = $surveyName . '_' . $dateTimeFormatted . '_TAM_export.xlsx';
+        $surveyIds = $request->get('surveys');
 
-        return Excel::download(new ResponsesTAMExport($survey_id), $fileName);
+        if (!$surveyIds) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang dipilih untuk diekspor');
+        }
+
+        // Convert comma-separated string to array
+        $surveyIdsArray = explode(',', $surveyIds);
+
+        // Validate survey IDs and check permissions
+        $user = auth()->user();
+        $validSurveyIds = [];
+
+        foreach ($surveyIdsArray as $surveyId) {
+            $survey = Survey::find($surveyId);
+
+            if (!$survey) {
+                continue;
+            }
+
+            // Check if survey has TAM method
+            if (!$survey->methods()->where('method_id', 2)->exists()) {
+                continue;
+            }
+
+            // Check permissions
+            if (!$user->hasPermissionTo('tam.index.full') && $survey->user_id != $user->id) {
+                continue;
+            }
+
+            $validSurveyIds[] = $surveyId;
+        }
+
+        if (empty($validSurveyIds)) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang valid untuk diekspor');
+        }
+
+        // Generate filename
+        $dateTime = now()->format('Y-m-d_H-i');
+        if (count($validSurveyIds) === 1) {
+            $survey = Survey::find($validSurveyIds[0]);
+            $fileName = $survey->title . '_' . $dateTime . '_TAM_export.xlsx';
+        } else {
+            $fileName = 'Multiple_TAM_Surveys_' . $dateTime . '_export.xlsx';
+        }
+
+        return Excel::download(new ResponsesTAMExport($validSurveyIds), $fileName);
     }
 }

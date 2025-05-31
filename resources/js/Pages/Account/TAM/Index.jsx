@@ -31,6 +31,11 @@ export default function Dashboard() {
     const [aiLoading, setAiLoading] = useState(false);
     const [aiError, setAiError] = useState('');
     const [lastGenerated, setLastGenerated] = useState(aiRecommendation?.generated_at || null);
+    
+    // Export modal states
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [selectedSurveys, setSelectedSurveys] = useState([]);
+    const [exportLoading, setExportLoading] = useState(false);
 
     let idTamCounter = 0;
     const data = JSON.parse(tamQustions[0].questions_data);
@@ -151,7 +156,44 @@ export default function Dashboard() {
     }));
 
     const handleExport = () => {
-        window.location.href = `/account/responses/tam/${survey.id}/export`;
+        setShowExportModal(true);
+    };
+
+    const handleSurveySelection = (surveyId) => {
+        setSelectedSurveys(prev => {
+            if (prev.includes(surveyId)) {
+                return prev.filter(id => id !== surveyId);
+            } else {
+                return [...prev, surveyId];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedSurveys.length === surveyTitles.length) {
+            setSelectedSurveys([]);
+        } else {
+            setSelectedSurveys(surveyTitles.map(survey => survey.id));
+        }
+    };
+
+    const handleConfirmExport = async () => {
+        if (selectedSurveys.length === 0) {
+            alert('Pilih minimal satu survei untuk diekspor');
+            return;
+        }
+
+        setExportLoading(true);
+                try {
+            const surveyIds = selectedSurveys.join(',');
+            window.location.href = `/account/responses/tam/export?surveys=${surveyIds}`;
+            setShowExportModal(false);
+            setSelectedSurveys([]);
+        } catch (error) {
+            alert('Terjadi kesalahan saat mengekspor data');
+        } finally {
+            setExportLoading(false);
+        }
     };
 
     return (
@@ -161,8 +203,9 @@ export default function Dashboard() {
             </Head>
             <LayoutAccount>
                 <div className="m-3">
+                    {/* Header Section with Export Button */}
                     <div className="row card-body border-0 shadow-sm mb-2">
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             Selamat Datang, <strong>{name}</strong> <br />
                             {currentSurveyTitle ? (
                                 <span>
@@ -173,7 +216,22 @@ export default function Dashboard() {
                                 <strong>Pilih survei terlebih dahulu.</strong>
                             )}
                         </div>
-                        <div className="col-md-6 text-end">
+                        <div className="col-md-4 text-center">
+                            {(hasAnyPermission(["tam.export"]) && hasAnyPermission(["tam.responses"])) && (
+                                <button
+                                    className="btn btn-style"
+                                    onClick={handleExport}
+                                    style={{
+                                        minWidth: "180px",
+                                        boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
+                                    }}
+                                >
+                                    <i className="fas fa-download me-2"></i>
+                                    Export to Excel
+                                </button>
+                            )}
+                        </div>
+                        <div className="col-md-4 text-end">
                             <div className="mb-2">
                                 <div className="dropdown">
                                     <button
@@ -216,6 +274,7 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
                     {hasAnyPermission(["tam.statistics"]) && (
                         <div className="row mt-2">
                             <InfoCard
@@ -488,16 +547,6 @@ export default function Dashboard() {
                                     <div>
                                         <div className="d-flex justify-content-between align-items-center mb-4">
                                             <h4>Hasil Respon TAM</h4>
-                                            {hasAnyPermission([
-                                                "tam.export",
-                                            ]) && (
-                                                <button
-                                                    className="btn btn-style"
-                                                    onClick={handleExport}
-                                                >
-                                                    Export to Excel
-                                                </button>
-                                            )}
                                         </div>
                                         <TAMTable
                                             data={tamSurveyResults}
@@ -513,6 +562,117 @@ export default function Dashboard() {
                         </>
                     )}
                 </div>
+
+                {/* Export Modal */}
+                {showExportModal && (
+                    <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+                        <div className="modal-dialog modal-lg">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        <i className="fas fa-download me-2"></i>
+                                        Export Data TAM
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <p className="text-muted">
+                                            Pilih survei yang ingin diekspor ke Excel:
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id="selectAll"
+                                                checked={selectedSurveys.length === surveyTitles.length}
+                                                onChange={handleSelectAll}
+                                            />
+                                                                                        <label className="form-check-label fw-bold" htmlFor="selectAll">
+                                                Pilih Semua
+                                            </label>
+                                        </div>
+                                        <hr />
+                                    </div>
+
+                                    <div className="survey-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        {surveyTitles.map((surveyItem) => (
+                                            <div key={surveyItem.id} className="form-check mb-2">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`survey-${surveyItem.id}`}
+                                                    checked={selectedSurveys.includes(surveyItem.id)}
+                                                    onChange={() => handleSurveySelection(surveyItem.id)}
+                                                />
+                                                <label 
+                                                    className="form-check-label" 
+                                                    htmlFor={`survey-${surveyItem.id}`}
+                                                >
+                                                    {surveyItem.title}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {selectedSurveys.length > 0 && (
+                                        <div className="mt-3 p-3 bg-light rounded">
+                                            <small className="text-muted">
+                                                <i className="fas fa-info-circle me-1"></i>
+                                                {selectedSurveys.length} survei dipilih untuk diekspor
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleConfirmExport}
+                                        disabled={selectedSurveys.length === 0 || exportLoading}
+                                    >
+                                        {exportLoading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Mengekspor...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-download me-2"></i>
+                                                Export ({selectedSurveys.length})
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showExportModal && <div className="modal-backdrop fade show"></div>}
             </LayoutAccount>
         </>
     );
