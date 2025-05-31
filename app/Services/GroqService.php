@@ -17,7 +17,7 @@ class GroqService
             $response = Http::withToken(env('GROQ_API_KEY'))
                 ->timeout(60)
                 ->post($this->baseUrl, [
-                    'model' => 'mixtral-8x7b-32768',
+                    'model' => 'deepseek-r1-distill-llama-70b',
                     'messages' => [
                         [
                             'role' => 'system',
@@ -56,41 +56,27 @@ class GroqService
             $prompt .= "Berdasarkan hasil analisis SUS di atas, berikan:\n\n";
             $prompt .= "1. **Analisis Mendalam**\n";
             $prompt .= "   - Interpretasi skor SUS dan kategori yang dicapai\n";
-            $prompt .= "   - Identifikasi area yang perlu diperbaiki berdasarkan rata-rata jawaban\n";
-            $prompt .= "   - Analisis pola respons pengguna\n\n";
+            $prompt .= "   - Identifikasi area yang perlu diperbaiki berdasarkan rata-rata jawaban\n\n";
 
             $prompt .= "2. **Rekomendasi Perbaikan UI/UX**\n";
             $prompt .= "   - Solusi spesifik untuk meningkatkan usability\n";
             $prompt .= "   - Perbaikan desain interface yang disarankan\n";
-            $prompt .= "   - Optimisasi user flow dan navigasi\n\n";
+            $prompt .= "   - Prioritas perbaikan (high, medium, low)\n\n";
 
-            $prompt .= "3. **Langkah Implementasi**\n";
-            $prompt .= "   - Prioritas perbaikan (high, medium, low)\n";
-            $prompt .= "   - Timeline implementasi yang realistis\n";
-            $prompt .= "   - Metrik untuk mengukur keberhasilan perbaikan\n\n";
-
-            $prompt .= "4. **Saran Pengujian Lanjutan**\n";
-            $prompt .= "   - Metode testing tambahan yang disarankan\n";
+            $prompt .= "3. **Saran Pengujian Lanjutan**\n";
             $prompt .= "   - Target skor SUS yang realistis untuk iterasi berikutnya\n";
         } else {
             $prompt .= "Berdasarkan hasil analisis TAM di atas, berikan:\n\n";
             $prompt .= "1. **Analisis Hubungan Variabel**\n";
-            $prompt .= "   - Interpretasi koefisien regresi dan hubungan antar variabel\n";
             $prompt .= "   - Identifikasi faktor yang paling berpengaruh terhadap penerimaan teknologi\n";
             $prompt .= "   - Analisis area yang perlu diperkuat\n\n";
 
-            $prompt .= "2. **Strategi Peningkatan Penerimaan**\n";
-            $prompt .= "   - Cara meningkatkan Perceived Usefulness (PU)\n";
-            $prompt .= "   - Strategi untuk memperbaiki Perceived Ease of Use (PEU)\n";
-            $prompt .= "   - Pendekatan untuk meningkatkan Attitude Toward Use (ATU)\n";
-            $prompt .= "   - Metode untuk memperkuat Behavioral Intention (BI)\n\n";
-
-            $prompt .= "3. **Rekomendasi Desain dan Fitur**\n";
+            $prompt .= "2. **Rekomendasi Desain dan Fitur**\n";
             $prompt .= "   - Perbaikan fitur berdasarkan feedback pengguna\n";
             $prompt .= "   - Optimisasi user experience untuk meningkatkan kemudahan penggunaan\n";
             $prompt .= "   - Penambahan fitur yang dapat meningkatkan perceived usefulness\n\n";
 
-            $prompt .= "4. **Strategi Adopsi Pengguna**\n";
+            $prompt .= "3. **Strategi Adopsi Pengguna**\n";
             $prompt .= "   - Pendekatan untuk meningkatkan actual system use\n";
             $prompt .= "   - Program pelatihan atau onboarding yang disarankan\n";
             $prompt .= "   - Komunikasi value proposition yang lebih efektif\n";
