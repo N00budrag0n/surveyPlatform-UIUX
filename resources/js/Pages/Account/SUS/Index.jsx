@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
+import ReactMarkdown from 'react-markdown';
 import hasAnyPermission from "../../../Utils/Permissions";
 import LayoutAccount from "../../../Layouts/Account";
 import CardContent from "../../../Layouts/CardContent";
@@ -285,28 +286,41 @@ export default function Dashboard() {
                             {/* AI Recommendation Section */}
                             <CardContent title="Rekomendasi AI">
                                 <div className="d-flex justify-content-between align-items-center mb-3">
-                                    <h6 className="mb-0">Solusi dan Saran Berbasis AI</h6>
+                                    <h6 className="mb-0">
+                                        Solusi dan Saran Berbasis AI
+                                    </h6>
                                     <button
                                         className="btn btn-primary"
                                         onClick={handleGenerateAI}
-                                        disabled={aiLoading || !resumeDescription}
+                                        disabled={
+                                            aiLoading || !resumeDescription
+                                        }
                                     >
                                         {aiLoading ? (
                                             <>
-                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
                                                 Menghasilkan...
                                             </>
                                         ) : (
                                             <>
                                                 <i className="fas fa-robot me-2"></i>
-                                                {aiResult ? 'Regenerate AI' : 'Generate AI'}
+                                                {aiResult
+                                                    ? "Regenerate AI"
+                                                    : "Generate AI"}
                                             </>
                                         )}
                                     </button>
                                 </div>
 
                                 {aiError && (
-                                    <div className="alert alert-danger" role="alert">
+                                    <div
+                                        className="alert alert-danger"
+                                        role="alert"
+                                    >
                                         <i className="fas fa-exclamation-triangle me-2"></i>
                                         {aiError}
                                     </div>
@@ -317,29 +331,36 @@ export default function Dashboard() {
                                         {lastGenerated && (
                                             <small className="text-muted mb-3 d-block">
                                                 <i className="fas fa-clock me-1"></i>
-                                                Terakhir dihasilkan: {new Date(lastGenerated).toLocaleString('id-ID')}
+                                                Terakhir dihasilkan:{" "}
+                                                {new Date(
+                                                    lastGenerated
+                                                ).toLocaleString("id-ID")}
                                             </small>
                                         )}
                                         <div
                                             className="ai-recommendation-content"
                                             style={{
-                                                backgroundColor: '#f8f9fa',
-                                                padding: '20px',
-                                                borderRadius: '8px',
-                                                border: '1px solid #dee2e6',
-                                                whiteSpace: 'pre-wrap',
-                                                lineHeight: '1.6'
+                                                backgroundColor: "#f8f9fa",
+                                                padding: "20px",
+                                                borderRadius: "8px",
+                                                border: "1px solid #dee2e6",
+                                                whiteSpace: "pre-wrap",
+                                                lineHeight: "1.6",
                                             }}
                                         >
-                                            {aiResult}
+                                            <ReactMarkdown>
+                                                {aiResult}
+                                            </ReactMarkdown>
                                         </div>
                                     </div>
                                 ) : (
                                     <div className="text-center py-4">
                                         <i className="fas fa-robot fa-3x text-muted mb-3"></i>
                                         <p className="text-muted">
-                                            Klik tombol "Generate AI" untuk mendapatkan rekomendasi dan solusi berbasis AI
-                                            berdasarkan hasil analisis SUS.
+                                            Klik tombol "Generate AI" untuk
+                                            mendapatkan rekomendasi dan solusi
+                                            berbasis AI berdasarkan hasil
+                                            analisis SUS.
                                         </p>
                                     </div>
                                 )}
