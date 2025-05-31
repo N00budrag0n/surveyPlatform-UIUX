@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
 import hasAnyPermission from "../../../Utils/Permissions";
@@ -24,7 +24,13 @@ export default function Dashboard() {
         susQuestions,
         resumeDescription,
         averageAnswer,
+        aiRecommendation,
     } = usePage().props;
+
+    const [aiResult, setAiResult] = useState(aiRecommendation?.ai_recommendation || '');
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState('');
+    const [lastGenerated, setLastGenerated] = useState(aiRecommendation?.generated_at || null);
 
     const name = `${auth.user.first_name} ${auth.user.surname}`;
 
@@ -32,6 +38,41 @@ export default function Dashboard() {
         return averageAnswer.map((answer, index) => {
             return `Rata-rata (${index + 1}) : ${answer}`;
         });
+    };
+
+    const handleGenerateAI = async () => {
+        if (!resumeDescription) {
+            setAiError('Tida ada data untuk dianalisis');
+            return;
+        }
+
+        setAiLoading(true);
+        setAiError('');
+
+        try {
+            const response = await fetch(`/account/sus/${survey.id}/ai-recommendation`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').conten
+                }
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setAiResult(data.recommendation);
+                setLastGenerated(data.generated_at);
+                setAiError('');
+            } else {
+                setAiError(data.error || 'Gagal menghasilkan rekomendasi AI');
+            }
+        } catch (error) {
+            setAiError('Terjadi kesalahan saat menghubungi server');
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     let idSusCounter = 0;
@@ -240,6 +281,69 @@ export default function Dashboard() {
                                     </div>
                                 </CardContent>
                             ) : null}
+
+                            {/* AI Recommendation Section */}
+                            <CardContent title="Rekomendasi AI">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 className="mb-0">Solusi dan Saran Berbasis AI</h6>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleGenerateAI}
+                                        disabled={aiLoading || !resumeDescription}
+                                    >
+                                        {aiLoading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                                                Menghasilkan...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-robot me-2"></i>
+                                                {aiResult ? 'Regenerate AI' : 'Generate AI'}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {aiError && (
+                                    <div className="alert alert-danger" role="alert">
+                                        <i className="fas fa-exclamation-triangle me-2"></i>
+                                        {aiError}
+                                    </div>
+                                )}
+
+                                {aiResult ? (
+                                    <div>
+                                        {lastGenerated && (
+                                            <small className="text-muted mb-3 d-block">
+                                                <i className="fas fa-clock me-1"></i>
+                                                Terakhir dihasilkan: {new Date(lastGenerated).toLocaleString('id-ID')}
+                                            </small>
+                                        )}
+                                        <div
+                                            className="ai-recommendation-content"
+                                            style={{
+                                                backgroundColor: '#f8f9fa',
+                                                padding: '20px',
+                                                borderRadius: '8px',
+                                                border: '1px solid #dee2e6',
+                                                whiteSpace: 'pre-wrap',
+                                                lineHeight: '1.6'
+                                            }}
+                                        >
+                                            {aiResult}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <i className="fas fa-robot fa-3x text-muted mb-3"></i>
+                                        <p className="text-muted">
+                                            Klik tombol "Generate AI" untuk mendapatkan rekomendasi dan solusi berbasis AI
+                                            berdasarkan hasil analisis SUS.
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
                         </>
                     )}
 
