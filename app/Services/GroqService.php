@@ -33,7 +33,12 @@ class GroqService
                 ]);
 
             if ($response->successful()) {
-                return $response->json()['choices'][0]['message']['content'];
+                $content = $response->json()['choices'][0]['message']['content'];
+
+                // Clean the response from any think tags
+                $cleanedContent = $this->cleanAiResponse($content);
+
+                return $cleanedContent;
             }
 
             throw new \Exception('Groq API request failed: ' . $response->body());
@@ -42,6 +47,20 @@ class GroqService
             Log::error('Groq AI Recommendation Error: ' . $e->getMessage());
             return 'Maaf, rekomendasi AI sementara tidak tersedia. Silakan coba lagi nanti.';
         }
+    }
+
+    private function cleanAiResponse($content)
+    {
+        // Remove <think> tags and their content
+        $cleaned = preg_replace('/<think>.*?<\/think>/is', '', $content);
+
+        // Remove any remaining think tags
+        $cleaned = preg_replace('/<\/?think>/i', '', $cleaned);
+
+        // Clean up extra whitespace
+        $cleaned = preg_replace('/\n{3,}/', "\n\n", $cleaned);
+
+        return trim($cleaned);
     }
 
     private function buildRecommendationPrompt($methodType, $resumeDescription, $surveyTheme)
