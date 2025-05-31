@@ -326,14 +326,55 @@ class AbTestController extends Controller
         return $abTestSurveyResults;
     }
 
-    public function export($survey_id)
+    public function export(Request $request)
     {
-        $survey = Survey::find($survey_id);
-        $surveyName = $survey->title;
-        $dateTime = now()->format('Y-m-d H.i');
-        $dateTimeFormatted = str_replace(' ', '-', $dateTime);
-        $fileName = $surveyName . '_' . $dateTimeFormatted . '_ABTest_export.xlsx';
+        $surveyIds = $request->get('surveys');
+        
+        if (!$surveyIds) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang dipilih untuk diekspor');
+        }
 
-        return Excel::download(new ResponsesABTestExport($survey_id), $fileName);
+        // Convert comma-separated string to array
+        $surveyIdsArray = explode(',', $surveyIds);
+        
+        // Validate survey IDs and check permissions
+        $user = auth()->user();
+        $validSurveyIds = [];
+        
+        foreach ($surveyIdsArray as $surveyId) {
+            $survey = Survey::find($surveyId);
+            
+            if (!$survey) {
+                continue;
+            }
+            
+            // Check if survey has A/B Testing method
+            if (!$survey->methods()->where('method_id', 3)->exists()) {
+                continue;
+            }
+            
+            // Check permissions
+            if (!$user->hasPermissionTo('ab_test.index.full') && $survey->user_id != $user->id) {
+                continue;
+            }
+            
+            $validSurveyIds[] = $surveyId;
+        }
+        
+        if (empty($validSurveyIds)) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang valid untuk diekspor');
+        }
+
+        // Generate filename
+        $dateTime = now()->format('Y-m-d_H-i');
+        
+        if (count($validSurveyIds) === 1) {
+            $survey = Survey::find($validSurveyIds[0]);
+            $fileName = $survey->title . '_' . $dateTime . '_ABTest_export.xlsx';
+        } else {
+            $fileName = 'Multiple_ABTest_Surveys_' . $dateTime . '_export.xlsx';
+        }
+
+        return Excel::download(new ResponsesABTestExport($validSurveyIds), $fileName);
     }
 }

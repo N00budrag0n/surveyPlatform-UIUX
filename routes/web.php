@@ -49,6 +49,10 @@ Route::group(['middleware' => 'cors'], function () {
         Route::group(['middleware' => ['auth']], function () {
             Route::get('/dashboard', [App\Http\Controllers\Account\DashboardController::class, 'index'])->name('account.dashboard');
 
+            // AI Recommendation for SUS and TAM
+            Route::post('/sus/{id}/ai-recommendation', [\App\Http\Controllers\Account\SusController::class, 'generateAiRecommendation'])->name('sus.ai-recommendation');
+            Route::post('/tam/{id}/ai-recommendation', [\App\Http\Controllers\Account\TamController::class, 'generateAiRecommendation'])->name('tam.ai-recommendation');
+
             Route::resource('profile', \App\Http\Controllers\Account\ProfileController::class, ['as' => 'account'])->only(['index', 'edit', 'update'])
                 ->middleware('permission:profile.index|profile.edit');
             Route::get('profile/certificate', [\App\Http\Controllers\Account\ProfileController::class, 'certificate'])
@@ -66,10 +70,14 @@ Route::group(['middleware' => 'cors'], function () {
             Route::resource('/categories', \App\Http\Controllers\Account\CategoryController::class, ['as' => 'account'])
                 ->middleware('permission:categories.index|categories.create|categories.edit|categories.delete');
 
-            Route::get('/responses/sus/{id}/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
-            Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
-            Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
-            Route::get('/responses/wcag_test/{id}/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
+            // Route::get('/responses/sus/{id}/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
+            // Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
+            // Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
+            // Route::get('/responses/wcag_test/{id}/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
+            Route::get('/responses/sus/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
+            Route::get('/responses/tam/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
+            Route::get('/responses/ab_test/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
+            Route::get('/responses/wcag_test/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
 
             Route::resource('/roles', \App\Http\Controllers\Account\RoleController::class, ['as' => 'account'])
                 ->middleware('permission:roles.index|roles.create|roles.edit|roles.delete');

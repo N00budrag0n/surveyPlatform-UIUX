@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
 import { Inertia } from "@inertiajs/inertia";
+import ReactMarkdown from "react-markdown";
 import hasAnyPermission from "../../../Utils/Permissions";
 import LayoutAccount from "../../../Layouts/Account";
 import CardContent from "../../../Layouts/CardContent";
@@ -24,7 +25,22 @@ export default function Dashboard() {
         susQuestions,
         resumeDescription,
         averageAnswer,
+        aiRecommendation,
     } = usePage().props;
+
+    const [aiResult, setAiResult] = useState(
+        aiRecommendation?.ai_recommendation || ""
+    );
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState("");
+    const [lastGenerated, setLastGenerated] = useState(
+        aiRecommendation?.generated_at || null
+    );
+
+    // Export modal states
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [selectedSurveys, setSelectedSurveys] = useState([]);
+    const [exportLoading, setExportLoading] = useState(false);
 
     const name = `${auth.user.first_name} ${auth.user.surname}`;
 
@@ -32,6 +48,45 @@ export default function Dashboard() {
         return averageAnswer.map((answer, index) => {
             return `Rata-rata (${index + 1}) : ${answer}`;
         });
+    };
+
+    const handleGenerateAI = async () => {
+        if (!resumeDescription) {
+            setAiError("Tida ada data untuk dianalisis");
+            return;
+        }
+
+        setAiLoading(true);
+        setAiError("");
+
+        try {
+            const response = await fetch(
+                `/account/sus/${survey.id}/ai-recommendation`,
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": document.querySelector(
+                            'meta[name="csrf-token"]'
+                        ).content,
+                    },
+                }
+            );
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                setAiResult(data.recommendation);
+                setLastGenerated(data.generated_at);
+                setAiError("");
+            } else {
+                setAiError(data.error || "Gagal menghasilkan rekomendasi AI");
+            }
+        } catch (error) {
+            setAiError("Terjadi kesalahan saat menghubungi server");
+        } finally {
+            setAiLoading(false);
+        }
     };
 
     let idSusCounter = 0;
@@ -105,8 +160,49 @@ export default function Dashboard() {
           }))
         : [];
 
+    // const handleExport = () => {
+    //     window.location.href = `/account/responses/sus/${survey.id}/export`;
+    // };
+
     const handleExport = () => {
-        window.location.href = `/account/responses/sus/${survey.id}/export`;
+        setShowExportModal(true);
+    };
+
+    const handleSurveySelection = (surveyId) => {
+        setSelectedSurveys((prev) => {
+            if (prev.includes(surveyId)) {
+                return prev.filter((id) => id !== surveyId);
+            } else {
+                return [...prev, surveyId];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedSurveys.length === surveyTitles.length) {
+            setSelectedSurveys([]);
+        } else {
+            setSelectedSurveys(surveyTitles.map((survey) => survey.id));
+        }
+    };
+
+    const handleConfirmExport = async () => {
+        if (selectedSurveys.length === 0) {
+            alert("Pilih minimal satu survei untuk diekspor");
+            return;
+        }
+
+        setExportLoading(true);
+        try {
+            const surveyIds = selectedSurveys.join(",");
+            window.location.href = `/account/responses/sus/export?surveys=${surveyIds}`;
+            setShowExportModal(false);
+            setSelectedSurveys([]);
+        } catch (error) {
+            alert("Terjadi kesalahan saat mengekspor data");
+        } finally {
+            setExportLoading(false);
+        }
     };
 
     return (
@@ -117,7 +213,7 @@ export default function Dashboard() {
             <LayoutAccount>
                 <div className="m-3">
                     <div className="row card-body border-0 shadow-sm mb-2">
-                        <div className="col-md-6">
+                        <div className="col-md-4">
                             Selamat Datang, <strong>{name}</strong> <br />
                             {currentSurveyTitle ? (
                                 <span>
@@ -128,7 +224,24 @@ export default function Dashboard() {
                                 <strong>Pilih survei terlebih dahulu.</strong>
                             )}
                         </div>
-                        <div className="col-md-6 text-end">
+                        <div className="col-md-4 text-center">
+                            {(hasAnyPermission(["sus.export"]) &&
+                                hasAnyPermission(["sus.responses"])) && (
+                                    <button
+                                        className="btn btn-style"
+                                        onClick={handleExport}
+                                        style={{
+                                            minWidth: "180px",
+                                            boxShadow:
+                                                "0 4px 8px rgba(0,0,0,0.1)",
+                                        }}
+                                    >
+                                        <i className="fas fa-download me-2"></i>
+                                        Export to Excel
+                                    </button>
+                                )}
+                        </div>
+                        <div className="col-md-4 text-end">
                             <div className="mb-2">
                                 <div className="dropdown">
                                     <button
@@ -240,6 +353,89 @@ export default function Dashboard() {
                                     </div>
                                 </CardContent>
                             ) : null}
+
+                            {/* AI Recommendation Section */}
+                            <CardContent title="Rekomendasi AI">
+                                <div className="d-flex justify-content-between align-items-center mb-3">
+                                    <h6 className="mb-0">
+                                        Solusi dan Saran Berbasis AI
+                                    </h6>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={handleGenerateAI}
+                                        disabled={
+                                            aiLoading || !resumeDescription
+                                        }
+                                    >
+                                        {aiLoading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Menghasilkan...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-robot me-2"></i>
+                                                {aiResult
+                                                    ? "Regenerate AI"
+                                                    : "Generate AI"}
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                {aiError && (
+                                    <div
+                                        className="alert alert-danger"
+                                        role="alert"
+                                    >
+                                        <i className="fas fa-exclamation-triangle me-2"></i>
+                                        {aiError}
+                                    </div>
+                                )}
+
+                                {aiResult ? (
+                                    <div>
+                                        {lastGenerated && (
+                                            <small className="text-muted mb-3 d-block">
+                                                <i className="fas fa-clock me-1"></i>
+                                                Terakhir dihasilkan:{" "}
+                                                {new Date(
+                                                    lastGenerated
+                                                ).toLocaleString("id-ID")}
+                                            </small>
+                                        )}
+                                        <div
+                                            className="ai-recommendation-content"
+                                            style={{
+                                                backgroundColor: "#f8f9fa",
+                                                padding: "20px",
+                                                borderRadius: "8px",
+                                                border: "1px solid #dee2e6",
+                                                whiteSpace: "pre-wrap",
+                                                lineHeight: "1.6",
+                                            }}
+                                        >
+                                            <ReactMarkdown>
+                                                {aiResult}
+                                            </ReactMarkdown>
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-4">
+                                        <i className="fas fa-robot fa-3x text-muted mb-3"></i>
+                                        <p className="text-muted">
+                                            Klik tombol "Generate AI" untuk
+                                            mendapatkan rekomendasi dan solusi
+                                            berbasis AI berdasarkan hasil
+                                            analisis SUS.
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
                         </>
                     )}
 
@@ -328,14 +524,6 @@ export default function Dashboard() {
                                 <div>
                                     <div className="d-flex justify-content-between align-items-center mb-4">
                                         <h4>Hasil Respon SUS</h4>
-                                        {hasAnyPermission(["sus.export"]) && (
-                                            <button
-                                                className="btn btn-style"
-                                                onClick={handleExport}
-                                            >
-                                                Export to Excel
-                                            </button>
-                                        )}
                                     </div>
                                     <SUSTableResponses
                                         data={susSurveyResults}
@@ -349,6 +537,150 @@ export default function Dashboard() {
                         </AccordionLayout>
                     )}
                 </div>
+
+                {/* Export Modal */}
+                {showExportModal && (
+                    <div
+                        className="modal fade show"
+                        style={{ display: "block" }}
+                        tabIndex="-1"
+                    >
+                        <div className="modal-dialog modal-lg">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        <i className="fas fa-download me-2"></i>
+                                        Export Data SUS
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <p className="text-muted">
+                                            Pilih survei yang ingin diekspor ke
+                                            Excel:
+                                        </p>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id="selectAll"
+                                                checked={
+                                                    selectedSurveys.length ===
+                                                    surveyTitles.length
+                                                }
+                                                onChange={handleSelectAll}
+                                            />
+                                            <label
+                                                className="form-check-label fw-bold"
+                                                htmlFor="selectAll"
+                                            >
+                                                Pilih Semua
+                                            </label>
+                                        </div>
+                                        <hr />
+                                    </div>
+
+                                    <div
+                                        className="survey-list"
+                                        style={{
+                                            maxHeight: "300px",
+                                            overflowY: "auto",
+                                        }}
+                                    >
+                                        {surveyTitles.map((surveyItem) => (
+                                            <div
+                                                key={surveyItem.id}
+                                                className="form-check mb-2"
+                                            >
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`survey-${surveyItem.id}`}
+                                                    checked={selectedSurveys.includes(
+                                                        surveyItem.id
+                                                    )}
+                                                    onChange={() =>
+                                                        handleSurveySelection(
+                                                            surveyItem.id
+                                                        )
+                                                    }
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor={`survey-${surveyItem.id}`}
+                                                >
+                                                    {surveyItem.title}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {selectedSurveys.length > 0 && (
+                                        <div className="mt-3 p-3 bg-light rounded">
+                                            <small className="text-muted">
+                                                <i className="fas fa-info-circle me-1"></i>
+                                                {selectedSurveys.length} survei
+                                                dipilih untuk diekspor
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleConfirmExport}
+                                        disabled={
+                                            selectedSurveys.length === 0 ||
+                                            exportLoading
+                                        }
+                                    >
+                                        {exportLoading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Mengekspor...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-download me-2"></i>
+                                                Export ({selectedSurveys.length}
+                                                )
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showExportModal && (
+                    <div className="modal-backdrop fade show"></div>
+                )}
             </LayoutAccount>
         </>
     );
