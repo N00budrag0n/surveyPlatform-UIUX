@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import LayoutAccount from "../../../Layouts/Account";
 import CardContent from "../../../Layouts/CardContent";
 import { Head, usePage, Link } from "@inertiajs/inertia-react";
@@ -8,6 +8,7 @@ import WcagHistoricalChart from "../../../Components/WcagHistoricalChart";
 import WcagComplianceScore from "../../../Components/WcagComplianceScore";
 import WcagConformanceLevels from "../../../Components/WcagConformanceLevels";
 import Swal from "sweetalert2";
+import hasAnyPermission from "../../../Utils/Permissions";
 
 export default function WcagTestIndex() {
     const {
@@ -21,11 +22,14 @@ export default function WcagTestIndex() {
         canRetest,
         lastTestedAt,
     } = usePage().props;
-    console.log(wcagResults);
+
+    // Export modal states
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [selectedSurveys, setSelectedSurveys] = useState([]);
+    const [exportLoading, setExportLoading] = useState(false);
 
     const handleSurveyChange = (event) => {
         const surveyId = event.target.value;
-        // Inertia.get(route("account.wcag_test.id", surveyId));
         Inertia.get(`/account/wcag_test/${surveyId}`);
     };
 
@@ -75,7 +79,44 @@ export default function WcagTestIndex() {
     };
 
     const handleExport = () => {
-        window.location.href = `/account/responses/wcag_test/${survey.id}/export`;
+        setShowExportModal(true);
+    };
+
+    const handleSurveySelection = (surveyId) => {
+        setSelectedSurveys((prev) => {
+            if (prev.includes(surveyId)) {
+                return prev.filter((id) => id !== surveyId);
+            } else {
+                return [...prev, surveyId];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedSurveys.length === surveyTitles.length) {
+            setSelectedSurveys([]);
+        } else {
+            setSelectedSurveys(surveyTitles.map((survey) => survey.id));
+        }
+    };
+
+    const handleConfirmExport = async () => {
+        if (selectedSurveys.length === 0) {
+            alert("Select at least one survey to export");
+            return;
+        }
+
+        setExportLoading(true);
+        try {
+            const surveyIds = selectedSurveys.join(",");
+            window.location.href = `/account/responses/wcag_test/export?surveys=${surveyIds}`;
+            setShowExportModal(false);
+            setSelectedSurveys([]);
+        } catch (error) {
+            alert("An error occurred while exporting data");
+        } finally {
+            setExportLoading(false);
+        }
     };
 
     return (
@@ -110,15 +151,16 @@ export default function WcagTestIndex() {
                                         Run Test Again
                                     </button>
                                 )}
-                                {wcagResults.success && (
-                                    <button
-                                        className="btn btn-success"
-                                        onClick={handleExport}
-                                    >
-                                        <i className="fa fa-file-excel me-2"></i>
-                                        Export Report
-                                    </button>
-                                )}
+                                {wcagResults.success &&
+                                    hasAnyPermission(["wcag_test.export"]) && (
+                                        <button
+                                            className="btn btn-success"
+                                            onClick={handleExport}
+                                        >
+                                            <i className="fa fa-file-excel me-2"></i>
+                                            Export Report
+                                        </button>
+                                    )}
                             </div>
                         </div>
                     </div>
@@ -157,19 +199,6 @@ export default function WcagTestIndex() {
                                             <i className="fas fa-exclamation-triangle me-2"></i>
                                             {wcagResults.error ||
                                                 "No test results available."}
-                                            {/* {!survey.url_website && (
-                                                <div className="mt-2">
-                                                    <Link
-                                                        href={route(
-                                                            `account.surveys.edit`,
-                                                            survey.id
-                                                        )}
-                                                        className="btn btn-sm btn-primary"
-                                                    >
-                                                        Add Website URL
-                                                    </Link>
-                                                </div>
-                                            )} */}
                                         </div>
                                     )}
                                 </div>
@@ -247,7 +276,6 @@ export default function WcagTestIndex() {
                                                                 className={getCategoryIcon(
                                                                     category
                                                                 )}
-                                                                // className="me-2"
                                                             ></i>
                                                             {category}
                                                         </span>
@@ -309,6 +337,149 @@ export default function WcagTestIndex() {
                         </>
                     )}
                 </CardContent>
+
+                {/* Export Modal */}
+                {showExportModal && (
+                    <div
+                        className="modal fade show"
+                        style={{ display: "block" }}
+                        tabIndex="-1"
+                    >
+                        <div className="modal-dialog modal-lg">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        <i className="fas fa-download me-2"></i>
+                                        Export WCAG Test Reports
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <p className="text-muted">
+                                            Select surveys to export to Excel:
+                                        </p>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id="selectAll"
+                                                checked={
+                                                    selectedSurveys.length ===
+                                                    surveyTitles.length
+                                                }
+                                                onChange={handleSelectAll}
+                                            />
+                                            <label
+                                                className="form-check-label fw-bold"
+                                                htmlFor="selectAll"
+                                            >
+                                                Select All
+                                            </label>
+                                        </div>
+                                        <hr />
+                                    </div>
+
+                                    <div
+                                        className="survey-list"
+                                        style={{
+                                            maxHeight: "300px",
+                                            overflowY: "auto",
+                                        }}
+                                    >
+                                        {surveyTitles.map((surveyItem) => (
+                                            <div
+                                                key={surveyItem.id}
+                                                className="form-check mb-2"
+                                            >
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`survey-${surveyItem.id}`}
+                                                    checked={selectedSurveys.includes(
+                                                        surveyItem.id
+                                                    )}
+                                                    onChange={() =>
+                                                        handleSurveySelection(
+                                                            surveyItem.id
+                                                        )
+                                                    }
+                                                />
+                                                <label
+                                                    className="form-check-label"
+                                                    htmlFor={`survey-${surveyItem.id}`}
+                                                >
+                                                    {surveyItem.title}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {selectedSurveys.length > 0 && (
+                                        <div className="mt-3 p-3 bg-light rounded">
+                                            <small className="text-muted">
+                                                <i className="fas fa-info-circle me-1"></i>
+                                                {selectedSurveys.length}{" "}
+                                                survey(s) selected for export
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleConfirmExport}
+                                        disabled={
+                                            selectedSurveys.length === 0 ||
+                                            exportLoading
+                                        }
+                                    >
+                                        {exportLoading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Exporting...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-download me-2"></i>
+                                                Export ({selectedSurveys.length}
+                                                )
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showExportModal && (
+                    <div className="modal-backdrop fade show"></div>
+                )}
             </LayoutAccount>
         </>
     );
@@ -317,70 +488,63 @@ export default function WcagTestIndex() {
 // Helper functions
 function getScoreClass(score) {
     if (score >= 90) return "excellent";
-    if (score >= 80) return "good";
-    if (score >= 70) return "acceptable";
-    if (score >= 60) return "poor";
-    return "critical";
+    if (score >= 70) return "good";
+    if (score >= 50) return "fair";
+    return "poor";
 }
 
 function getLevelColor(level) {
     switch (level) {
-        case "A":
-            return "danger";
-        case "AA":
-            return "warning";
         case "AAA":
             return "success";
-        case "Non-conformant":
-            return "secondary";
-        default:
+        case "AA":
             return "primary";
+        case "A":
+            return "warning";
+        default:
+            return "danger";
     }
 }
 
-function getScoreMessage(conformanceLevel) {
-    console.log()
-    if (conformanceLevel === "Non-conformant") {
-        return "Critical: Level A requirements not met. No WCAG conformance can be claimed.";
+function getScoreMessage(level) {
+    switch (level) {
+        case "AAA":
+            return "Excellent accessibility compliance";
+        case "AA":
+            return "Good accessibility compliance";
+        case "A":
+            return "Basic accessibility compliance";
+        default:
+            return "Accessibility issues need attention";
     }
-    if (conformanceLevel === "AAA") {
-        return "Excellent! Your website meets the highest accessibility standards.";
-    }
-    if (conformanceLevel === "AA") {
-        return "Good! Your website meets recommended accessibility standards.";
-    }
-    if (conformanceLevel === "A") {
-        return "Basic compliance achieved, but consider improving to AA level.";
-    }
-    return "Conformance level could not be determined.";
 }
 
 function getCategoryIcon(category) {
     switch (category) {
         case "Perceivable":
-            return "fas fa-eye";
+            return "fas fa-eye me-2";
         case "Operable":
-            return "fas fa-hand-pointer";
+            return "fas fa-hand-pointer me-2";
         case "Understandable":
-            return "fas fa-brain";
+            return "fas fa-brain me-2";
         case "Robust":
-            return "fas fa-cogs";
+            return "fas fa-shield-alt me-2";
         default:
-            return "fas fa-check-circle";
+            return "fas fa-exclamation-triangle me-2";
     }
 }
 
 function getCategoryDescription(category) {
     switch (category) {
         case "Perceivable":
-            return "Information and user interface components must be presentable to users in ways they can perceive. This means users must be able to perceive the information being presented.";
+            return "Information and user interface components must be presentable to users in ways they can perceive.";
         case "Operable":
-            return "User interface components and navigation must be operable. This means users must be able to operate the interface and not be prevented from interacting with the page.";
+            return "User interface components and navigation must be operable.";
         case "Understandable":
-            return "Information and the operation of user interface must be understandable. This means users must be able to understand the information and the operation of the user interface.";
+            return "Information and the operation of user interface must be understandable.";
         case "Robust":
-            return "Content must be robust enough that it can be interpreted reliably by a wide variety of user agents, including assistive technologies. This means users must be able to access the content as technologies advance.";
+            return "Content must be robust enough that it can be interpreted reliably by a wide variety of user agents, including assistive technologies.";
         default:
-            return "";
+            return "Other accessibility issues that need attention.";
     }
 }
