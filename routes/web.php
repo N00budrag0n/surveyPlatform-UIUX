@@ -71,10 +71,13 @@ Route::group(['middleware' => 'cors'], function () {
                 ->middleware('permission:categories.index|categories.create|categories.edit|categories.delete');
 
             // Route::get('/responses/sus/{id}/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
+            // Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
+            // Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
+            // Route::get('/responses/wcag_test/{id}/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
             Route::get('/responses/sus/export', [App\Http\Controllers\Account\SusController::class, 'export'])->name('responses.sus.export');
-            Route::get('/responses/tam/{id}/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
-            Route::get('/responses/ab_test/{id}/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
-            Route::get('/responses/wcag_test/{id}/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
+            Route::get('/responses/tam/export', [App\Http\Controllers\Account\TamController::class, 'export'])->name('responses.tam.export');
+            Route::get('/responses/ab_test/export', [\App\Http\Controllers\Account\AbTestController::class, 'export'])->name('responses.ab_test.export');
+            Route::get('/responses/wcag_test/export', [\App\Http\Controllers\Account\WcagTestController::class, 'export'])->name('responses.awcag_test.export');
 
             Route::resource('/roles', \App\Http\Controllers\Account\RoleController::class, ['as' => 'account'])
                 ->middleware('permission:roles.index|roles.create|roles.edit|roles.delete');
