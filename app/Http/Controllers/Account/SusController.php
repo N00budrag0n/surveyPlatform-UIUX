@@ -448,14 +448,67 @@ class SusController extends Controller
         return $resumeParagraph;
     }
 
-    public function export($survey_id)
-    {
-        $survey = Survey::find($survey_id);
-        $surveyName = $survey->title;
-        $dateTime = now()->format('Y-m-d H.i');
-        $dateTimeFormatted = str_replace(' ', '-', $dateTime);
-        $fileName = $surveyName . '_' . $dateTimeFormatted . '_SUS_export.xlsx';
+    // public function export($survey_id)
+    // {
+    //     $survey = Survey::find($survey_id);
+    //     $surveyName = $survey->title;
+    //     $dateTime = now()->format('Y-m-d H.i');
+    //     $dateTimeFormatted = str_replace(' ', '-', $dateTime);
+    //     $fileName = $surveyName . '_' . $dateTimeFormatted . '_SUS_export.xlsx';
 
-        return Excel::download(new ResponsesSUSExport($survey_id), $fileName);
+    //     return Excel::download(new ResponsesSUSExport($survey_id), $fileName);
+    // }
+
+    public function export(Request $request)
+    {
+        $surveyIds = $request->get('surveys');
+
+        if (!$surveyIds) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang dipilih untuk diekspor');
+        }
+
+        // Convert comma-separated string to array
+        $surveyIdsArray = explode(',', $surveyIds);
+
+        // Validate survey IDs and check permissions
+        $user = auth()->user();
+        $validSurveyIds = [];
+
+        foreach ($surveyIdsArray as $surveyId) {
+            $survey = Survey::find($surveyId);
+
+            if (!$survey) {
+                continue;
+            }
+
+            // Check if survey has SUS method
+            if (!$survey->methods()->where('method_id', 1)->exists()) {
+                continue;
+            }
+
+            // Check permissions
+            if (!$user->hasPermissionTo('sus.index.full') && $survey->user_id != $user->id) {
+                continue;
+            }
+
+            $validSurveyIds[] = $surveyId;
+        }
+
+        if (empty($validSurveyIds)) {
+            return redirect()->back()->with('error', 'Tidak ada survei yang valid untuk diekspor');
+        }
+
+        // Generate filename
+        $dateTime = now()->format('Y-m-d_H-i');
+        $surveyCount = count($validSurveyIds);
+
+        if ($surveyCount === 1) {
+            $survey = Survey::find($validSurveyIds[0]);
+            $fileName = $survey->title . '_' . $dateTime . '_SUS_export.xlsx';
+        } else {
+            $fileName = 'Multiple_SUS_Surveys_' . $dateTime . '_export.xlsx';
+        }
+
+        return Excel::download(new ResponsesSUSExport($validSurveyIds), $fileName);
     }
 }
