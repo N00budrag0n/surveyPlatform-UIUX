@@ -16,8 +16,54 @@ export default function ABTestIndex() {
         abTestQuestions 
     } = usePage().props;
 
+     // Export modal states
+    const [showExportModal, setShowExportModal] = useState(false);
+    const [selectedSurveys, setSelectedSurveys] = useState([]);
+    const [exportLoading, setExportLoading] = useState(false);
+
     // Make sure survey exists before accessing its properties
     const surveyTitle = survey ? survey.title : "A/B Testing Results";
+
+    const handleExport = () => {
+        setShowExportModal(true);
+    };
+
+    const handleSurveySelection = (surveyId) => {
+        setSelectedSurveys(prev => {
+            if (prev.includes(surveyId)) {
+                return prev.filter(id => id !== surveyId);
+            } else {
+                return [...prev, surveyId];
+            }
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedSurveys.length === surveyTitles.length) {
+            setSelectedSurveys([]);
+        } else {
+            setSelectedSurveys(surveyTitles.map(survey => survey.id));
+        }
+    };
+
+    const handleConfirmExport = async () => {
+        if (selectedSurveys.length === 0) {
+            alert('Pilih minimal satu survei untuk diekspor');
+            return;
+        }
+
+        setExportLoading(true);
+        try {
+            const surveyIds = selectedSurveys.join(',');
+            window.location.href = `/account/responses/ab_test/export?surveys=${surveyIds}`;
+            setShowExportModal(false);
+            setSelectedSurveys([]);
+        } catch (error) {
+            alert('Terjadi kesalahan saat mengekspor data');
+        } finally {
+            setExportLoading(false);
+        }
+    };
 
     return (
         <>
@@ -40,15 +86,15 @@ export default function ABTestIndex() {
                                     ))}
                                 </select>
                             </div>
-                            {survey && (
+                            {survey && hasAnyPermission(["ab_test.export"]) && (
                                 <div className="col-md-6 mb-2 text-end">
-                                    <a 
-                                        href={`/account/responses/ab_test/${survey.id}/export`} 
+                                    <button 
+                                        onClick={handleExport}
                                         className="btn btn-success"
                                     >
                                         <i className="fas fa-file-excel me-2"></i>
                                         Export to Excel
-                                    </a>
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -127,6 +173,117 @@ export default function ABTestIndex() {
                         )}
                     </div>
                 </div>
+
+                {/* Export Modal */}
+                {showExportModal && (
+                    <div className="modal fade show" style={{ display: 'block' }} tabIndex="-1">
+                        <div className="modal-dialog modal-lg">
+                            <div className="modal-content">
+                                <div className="modal-header">
+                                    <h5 className="modal-title">
+                                        <i className="fas fa-download me-2"></i>
+                                        Export Data A/B Testing
+                                    </h5>
+                                    <button
+                                        type="button"
+                                        className="btn-close"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    ></button>
+                                </div>
+                                <div className="modal-body">
+                                    <div className="mb-3">
+                                        <p className="text-muted">
+                                            Pilih survei yang ingin diekspor ke Excel:
+                                        </p>
+                                    </div>
+                                    
+                                    <div className="mb-3">
+                                        <div className="form-check">
+                                            <input
+                                                className="form-check-input"
+                                                type="checkbox"
+                                                id="selectAll"
+                                                checked={selectedSurveys.length === surveyTitles.length}
+                                                onChange={handleSelectAll}
+                                            />
+                                            <label className="form-check-label fw-bold" htmlFor="selectAll">
+                                                Pilih Semua
+                                            </label>
+                                        </div>
+                                        <hr />
+                                    </div>
+
+                                    <div className="survey-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                        {surveyTitles.map((surveyItem) => (
+                                            <div key={surveyItem.id} className="form-check mb-2">
+                                                <input
+                                                    className="form-check-input"
+                                                    type="checkbox"
+                                                    id={`survey-${surveyItem.id}`}
+                                                    checked={selectedSurveys.includes(surveyItem.id)}
+                                                    onChange={() => handleSurveySelection(surveyItem.id)}
+                                                />
+                                                <label 
+                                                    className="form-check-label" 
+                                                    htmlFor={`survey-${surveyItem.id}`}
+                                                >
+                                                    {surveyItem.title}
+                                                </label>
+                                            </div>
+                                        ))}
+                                    </div>
+
+                                    {selectedSurveys.length > 0 && (
+                                        <div className="mt-3 p-3 bg-light rounded">
+                                            <small className="text-muted">
+                                                <i className="fas fa-info-circle me-1"></i>
+                                                {selectedSurveys.length} survei dipilih untuk diekspor
+                                            </small>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="modal-footer">
+                                    <button
+                                        type="button"
+                                        className="btn btn-secondary"
+                                        onClick={() => {
+                                            setShowExportModal(false);
+                                            setSelectedSurveys([]);
+                                        }}
+                                    >
+                                        Batal
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="btn btn-primary"
+                                        onClick={handleConfirmExport}
+                                        disabled={selectedSurveys.length === 0 || exportLoading}
+                                    >
+                                        {exportLoading ? (
+                                            <>
+                                                <span
+                                                    className="spinner-border spinner-border-sm me-2"
+                                                    role="status"
+                                                    aria-hidden="true"
+                                                ></span>
+                                                Mengekspor...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fas fa-download me-2"></i>
+                                                Export ({selectedSurveys.length})
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+                {showExportModal && <div className="modal-backdrop fade show"></div>}
             </LayoutAccount>
         </>
     );
