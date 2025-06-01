@@ -194,18 +194,19 @@ function Form() {
             abTestingResponses,
         };
 
+        // Add user id to survey data in local storage
         localStorage.setItem(
-            `surveyData_${surveys.id}`,
+            `surveyData_${surveys.id}_${auth.id}`,
             JSON.stringify(surveyData)
         );
 
         setTimeout(() => {
-            localStorage.removeItem(`surveyData_${surveys.id}`);
+            localStorage.removeItem(`surveyData_${surveys.id}_${auth.id}`);
         }, oneWeekInMillis);
     }, [formData, susValues, tamValues, abTestingResponses]);
 
     const loadSurveyData = () => {
-        const storedData = localStorage.getItem(`surveyData_${surveys.id}`);
+        const storedData = localStorage.getItem(`surveyData_${surveys.id}_${auth.id}`);
         if (storedData) {
             const parsedData = JSON.parse(storedData);
             setFormData(parsedData.formData);
@@ -215,6 +216,11 @@ function Form() {
                 setAbTestingResponses(parsedData.abTestingResponses);
             }
         }
+    };
+
+    // remove local storage data when submitted
+    const removeSurveyData = () => {
+        localStorage.removeItem(`surveyData_${surveys.id}_${auth.id}`);
     };
 
     function handleSUSChange(dataAnswer, selectedValue) {
