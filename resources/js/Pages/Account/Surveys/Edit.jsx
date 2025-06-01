@@ -881,10 +881,10 @@ export default function SurveyEdit() {
                         </div>
                         <hr />
 
-                        <ABTestingGroups
+                        {/* <ABTestingGroups
                             abTestingData={abTestingData}
                             setAbTestingData={setAbTestingData}
-                        />
+                        /> */}
 
                         {/* A/B Testing Groups */}
                         {abTestingData.map((group, groupIndex) => (
