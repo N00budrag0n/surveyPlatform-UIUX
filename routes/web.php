@@ -39,6 +39,7 @@ Route::group(['middleware' => 'cors'], function () {
 
     Route::get('/articles', [\App\Http\Controllers\Web\ArticleController::class, 'index'])->name('web.articles.index');
     Route::get('/articles/{id}/{slug}', [\App\Http\Controllers\Web\ArticleController::class, 'show'])->name('web.articles.show');
+    Route::post('/articles/{id}/report', [\App\Http\Controllers\Web\ArticleController::class, 'report'])->name('web.articles.report');
 
     Route::get('/form/{id}/{slug}', [\App\Http\Controllers\Web\FormController::class, 'show'])->name('form.show')->middleware('auth');
     Route::post('/form', [\App\Http\Controllers\Web\FormController::class, 'store'])->middleware('auth');

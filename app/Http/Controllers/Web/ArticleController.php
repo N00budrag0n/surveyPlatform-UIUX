@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Web;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use App\Models\Articles;
 use App\Models\User;
+use App\Models\Articles;
+use Illuminate\Http\Request;
+use App\Models\ArticleReport;
+use App\Http\Controllers\Controller;
 
 class ArticleController extends Controller
 {
@@ -33,6 +34,30 @@ class ArticleController extends Controller
         return inertia('Web/Articles/Show', [
             'auth' => $user,
             'article' => $article
+        ]);
+    }
+
+    public function report(Request $request, $id)
+    {
+        $request->validate([
+            'reason' => 'required|string|max:255',
+            'description' => 'nullable|string|max:1000',
+        ]);
+
+        $article = Articles::findOrFail($id);
+        $user = auth()->user();
+
+        ArticleReport::create([
+            'article_id' => $article->id,
+            'user_id' => $user ? $user->id : null,
+            'reason' => $request->reason,
+            'description' => $request->description,
+            'status' => 'pending'
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Report submitted successfully. We will review it shortly.'
         ]);
     }
 }
