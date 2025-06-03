@@ -95,6 +95,18 @@ Route::group(['middleware' => 'cors'], function () {
             Route::resource('articles', \App\Http\Controllers\Account\ArticleController::class, ['as' => 'account'])
                 ->middleware('permission:articles.index|articles.index.full|articles.create|articles.edit|articles.delete');
 
+            // Article Reports Management
+            Route::get('/article-reports', [\App\Http\Controllers\Account\ArticleController::class, 'reportsIndex'])
+                ->middleware('permission:article_reports.index')->name('account.article-reports.index');
+            Route::get('/article-reports/{id}', [\App\Http\Controllers\Account\ArticleController::class, 'reportShow'])
+                ->middleware('permission:article_reports.show')->name('account.article-reports.show');
+            Route::put('/article-reports/{id}/status', [\App\Http\Controllers\Account\ArticleController::class, 'updateReportStatus'])
+                ->middleware('permission:article_reports.update_status')->name('account.article-reports.update-status');
+            Route::delete('/article-reports/{id}', [\App\Http\Controllers\Account\ArticleController::class, 'destroyReport'])
+                ->middleware('permission:article_reports.delete')->name('account.article-reports.destroy');
+            Route::post('/article-reports/bulk-update', [\App\Http\Controllers\Account\ArticleController::class, 'bulkUpdateReports'])
+                ->middleware('permission:article_reports.update_status')->name('account.article-reports.bulk-update');
+
             Route::get('/sus', [\App\Http\Controllers\Account\SusController::class, 'index'])
                 ->middleware('permission:sus.index|sus.index.full')->name('account.sus');
             Route::get('/sus/{id}', [App\Http\Controllers\Account\SusController::class, 'show'])

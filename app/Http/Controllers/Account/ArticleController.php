@@ -2,12 +2,13 @@
 
 namespace App\Http\Controllers\Account;
 
-use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 use App\Models\User;
 use App\Models\Articles;
+use Illuminate\Support\Str;
+use Illuminate\Http\Request;
+use App\Models\ArticleReport;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Storage;
 
 class ArticleController extends Controller
 {
@@ -152,5 +153,104 @@ class ArticleController extends Controller
 
         $article->delete();
         return redirect()->route('account.articles.index');
+    }
+
+    // Article Reports Management Methods
+    public function reportsIndex()
+    {
+        $reports = ArticleReport::with(['article', 'user'])
+            ->when(request()->status, function ($query) {
+                return $query->where('status', request()->status);
+            })
+            ->when(request()->reason, function ($query) {
+                return $query->where('reason', request()->reason);
+            })
+            ->when(request()->q, function ($query) {
+                return $query->whereHas('article', function ($articleQuery) {
+                    $articleQuery->where('title', 'like', '%' . request()->q . '%');
+                });
+            })
+            ->latest()
+            ->paginate(15);
+
+        $reports->appends(request()->all());
+
+        $statusCounts = [
+            'pending' => ArticleReport::where('status', 'pending')->count(),
+            'reviewed' => ArticleReport::where('status', 'reviewed')->count(),
+            'resolved' => ArticleReport::where('status', 'resolved')->count(),
+            'dismissed' => ArticleReport::where('status', 'dismissed')->count(),
+        ];
+
+        return inertia('Account/Articles/Reports/Index', [
+            'reports' => $reports,
+            'statusCounts' => $statusCounts,
+            'filters' => [
+                'status' => request()->status,
+                'reason' => request()->reason,
+                'q' => request()->q
+            ]
+        ]);
+    }
+
+    public function reportShow($id)
+    {
+        $report = ArticleReport::with(['article.user', 'user'])->findOrFail($id);
+
+        return inertia('Account/Articles/Reports/Show', [
+            'report' => $report
+        ]);
+    }
+
+    public function updateReportStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:pending,reviewed,resolved,dismissed',
+            'admin_notes' => 'nullable|string|max:1000'
+        ]);
+
+        $report = ArticleReport::findOrFail($id);
+
+        $report->update([
+            'status' => $request->status,
+            'admin_notes' => $request->admin_notes,
+            'reviewed_by' => auth()->id(),
+            'reviewed_at' => now()
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Report status updated successfully.'
+        ]);
+    }
+
+    public function destroyReport($id)
+    {
+        $report = ArticleReport::findOrFail($id);
+        $report->delete();
+
+        return redirect()->route('account.article-reports.index')
+            ->with('success', 'Report deleted successfully.');
+    }
+
+    public function bulkUpdateReports(Request $request)
+    {
+        $request->validate([
+            'report_ids' => 'required|array',
+            'report_ids.*' => 'exists:article_reports,id',
+            'status' => 'required|in:pending,reviewed,resolved,dismissed'
+        ]);
+
+        ArticleReport::whereIn('id', $request->report_ids)
+            ->update([
+                'status' => $request->status,
+                'reviewed_by' => auth()->id(),
+                'reviewed_at' => now()
+            ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Reports updated successfully.'
+        ]);
     }
 }
