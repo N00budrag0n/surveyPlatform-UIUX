@@ -92,7 +92,7 @@ class UserTableSeeder extends Seeder
         $permissions1 = Permission::all();
         $permissions2 = Permission::whereNotIn('name', [
             'dashboard.index.full', 'articles.index.full', 'sus.index.full', 'tam.index.full', 'ab_test.index.full', 'roles.index', 'roles.edit', 'roles.create', 'roles.delete', 'roles.index.full', 'permissions.index',
-            'users.index', 'users.delete', 'users.edit', 'users.create',
+            'users.index', 'users.delete', 'users.edit', 'users.create', 'article_reports.index', 'article_reports.show', 'article_reports.update_status', 'article_reports.delete'
         ])->get();
         $permissions3 = Permission::whereIn('name', [
             'dashboard.index', 'profile.index', 'profile.edit', 'profile.upload.certificate', 'profile.change.password',

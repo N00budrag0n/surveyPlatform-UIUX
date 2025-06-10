@@ -1,13 +1,23 @@
 import React from "react";
 import hasAnyPermission from "../Utils/Permissions";
 import { Link, usePage } from "@inertiajs/inertia-react";
+import "./sidebar.css"; // Import the CSS
 
 export default function Sidebar() {
     const { url } = usePage();
 
     return (
         <>
-            <div className="list-group list-group-flush">
+            <div
+                className="list-group list-group-flush"
+                style={{
+                    maxHeight: 'calc(100vh - 120px)', // Adjust based on your header height
+                    overflowY: 'auto',
+                    overflowX: 'hidden',
+                    scrollbarWidth: 'thin', // For Firefox
+                    scrollbarColor: '#888 #f1f1f1' // For Firefox
+                }}
+            >
                 {hasAnyPermission([
                     "dashboard.index",
                     "dashboard.index.full",
@@ -62,6 +72,7 @@ export default function Sidebar() {
                         <i className="fa fa-poll-h me-2"></i> A/B Testing Results
                     </Link>
                 )}
+
                 {hasAnyPermission(["wcag_test.index", "wcag_test.index.full"]) && (
                     <Link
                         href="/account/wcag_test"
@@ -74,7 +85,6 @@ export default function Sidebar() {
                         <i className="fa fa-poll-h me-2"></i> WCAG Testing Results
                     </Link>
                 )}
-
 
                 {hasAnyPermission(["surveys.index", "surveys.index.full"]) && (
                     <Link
@@ -172,7 +182,53 @@ export default function Sidebar() {
                         <i className="fa fa-newspaper me-2"></i> Articles
                     </Link>
                 )}
+
+                {hasAnyPermission(["article_reports.index"]) && (
+                    <Link
+                        href="/account/article-reports"
+                        className={`${
+                            url.startsWith("/account/article-reports")
+                                ? "active list-group-item list-group-item-action list-group-item-light p-3"
+                                : "list-group-item list-group-item-action list-group-item-light p-3"
+                        }`}
+                    >
+                        <i className="fa fa-flag me-2"></i> Article Reports
+                    </Link>
+                )}
             </div>
+
+            {/* Custom CSS for better scrollbar styling */}
+            <style jsx>{`
+                .list-group-flush::-webkit-scrollbar {
+                    width: 8px;
+                }
+
+                .list-group-flush::-webkit-scrollbar-track {
+                    background: #f1f1f1;
+                    border-radius: 10px;
+                }
+
+                .list-group-flush::-webkit-scrollbar-thumb {
+                    background: #888;
+                    border-radius: 10px;
+                }
+
+                .list-group-flush::-webkit-scrollbar-thumb:hover {
+                    background: #555;
+                }
+
+                /* Smooth scrolling */
+                .list-group-flush {
+                    scroll-behavior: smooth;
+                }
+
+                /* Hide scrollbar on mobile devices to save space */
+                @media (max-width: 768px) {
+                    .list-group-flush::-webkit-scrollbar {
+                        width: 4px;
+                    }
+                }
+            `}</style>
         </>
     );
 }

@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Head, usePage } from "@inertiajs/inertia-react";
 import LayoutAccount from "../../../Layouts/Account";
+import hasAnyPermission from "../../../Utils/Permissions";
 import ABTestingResults from "../../../Components/ABTestingResults";
 import ABTestingRespondents from "../../../Components/ABTestingRespondents";
 import { Link } from "@inertiajs/inertia-react";
@@ -90,7 +91,7 @@ export default function ABTestIndex() {
                                 <div className="col-md-6 mb-2 text-end">
                                     <button 
                                         onClick={handleExport}
-                                        className="btn btn-success"
+                                        className="btn btn-style"
                                     >
                                         <i className="fas fa-file-excel me-2"></i>
                                         Export to Excel
