@@ -286,19 +286,19 @@ class AbTestController extends Controller
                 // }
                 // Replace the existing theme analysis code with this simpler approach
                 // Add text summaries for reasons
-                if (count($data['reasons_a']) >= 2) {
-                    $textSummaryA = $this->textAnalysisService->generateSummary($data['reasons_a']);
-                    if ($textSummaryA) {
-                        $results[$groupName][$comparisonId]['text_summary_a'] = $textSummaryA;
-                    }
-                }
+                // if (count($data['reasons_a']) >= 2) {
+                //     $textSummaryA = $this->textAnalysisService->generateSummary($data['reasons_a']);
+                //     if ($textSummaryA) {
+                //         $results[$groupName][$comparisonId]['text_summary_a'] = $textSummaryA;
+                //     }
+                // }
 
-                if (count($data['reasons_b']) >= 2) {
-                    $textSummaryB = $this->textAnalysisService->generateSummary($data['reasons_b']);
-                    if ($textSummaryB) {
-                        $results[$groupName][$comparisonId]['text_summary_b'] = $textSummaryB;
-                    }
-                }
+                // if (count($data['reasons_b']) >= 2) {
+                //     $textSummaryB = $this->textAnalysisService->generateSummary($data['reasons_b']);
+                //     if ($textSummaryB) {
+                //         $results[$groupName][$comparisonId]['text_summary_b'] = $textSummaryB;
+                //     }
+                // }
             }
         }
 
@@ -329,45 +329,45 @@ class AbTestController extends Controller
     public function export(Request $request)
     {
         $surveyIds = $request->get('surveys');
-        
+
         if (!$surveyIds) {
             return redirect()->back()->with('error', 'Tidak ada survei yang dipilih untuk diekspor');
         }
 
         // Convert comma-separated string to array
         $surveyIdsArray = explode(',', $surveyIds);
-        
+
         // Validate survey IDs and check permissions
         $user = auth()->user();
         $validSurveyIds = [];
-        
+
         foreach ($surveyIdsArray as $surveyId) {
             $survey = Survey::find($surveyId);
-            
+
             if (!$survey) {
                 continue;
             }
-            
+
             // Check if survey has A/B Testing method
             if (!$survey->methods()->where('method_id', 3)->exists()) {
                 continue;
             }
-            
+
             // Check permissions
             if (!$user->hasPermissionTo('ab_test.index.full') && $survey->user_id != $user->id) {
                 continue;
             }
-            
+
             $validSurveyIds[] = $surveyId;
         }
-        
+
         if (empty($validSurveyIds)) {
             return redirect()->back()->with('error', 'Tidak ada survei yang valid untuk diekspor');
         }
 
         // Generate filename
         $dateTime = now()->format('Y-m-d_H-i');
-        
+
         if (count($validSurveyIds) === 1) {
             $survey = Survey::find($validSurveyIds[0]);
             $fileName = $survey->title . '_' . $dateTime . '_ABTest_export.xlsx';
