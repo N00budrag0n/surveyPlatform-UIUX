@@ -36,4 +36,10 @@ return [
         'api_url' => env('GROQ_API_URL', 'https://api.groq.com/openai/v1/chat/completions'),
     ],
 
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
 ];
