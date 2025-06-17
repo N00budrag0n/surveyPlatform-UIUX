@@ -20,6 +20,14 @@ Route::group(['middleware' => 'cors'], function () {
     Route::post('/register/personaldata', [\App\Http\Controllers\Auth\RegisterController::class, 'storePersonalData'])->name('PersonalData.store')->middleware('guest');
     Route::post('/register/preferencedata', [\App\Http\Controllers\Auth\RegisterController::class, 'storePreferenceData'])->name('PreferenceData.store')->middleware('guest');
 
+    // google oauth routes
+    Route::get('/oauth/google', [\App\Http\Controllers\Auth\GoogleController::class, 'redirectToGoogle'])->name('google.redirect');
+    Route::get('/oauth/google/callback', [\App\Http\Controllers\Auth\LoginController::class, 'handleGoogleCallback'])->name('google.callback')->middleware('guest');
+
+    // google registration completion
+    Route::get('/register/google/complete', [\App\Http\Controllers\Auth\RegisterController::class, 'googleCompleteRegistration'])->name('register.google.complete')->middleware('guest');
+    Route::post('/register/google/complete', [\App\Http\Controllers\Auth\RegisterController::class, 'storeGooglePersonalData'])->name('register.google.store')->middleware('guest');
+
     Route::get('/login', [\App\Http\Controllers\Auth\LoginController::class, 'index'])->name('login')->middleware('guest');
     Route::post('/login', [\App\Http\Controllers\Auth\LoginController::class, 'store'])->name('login.store')->middleware('guest');
 
