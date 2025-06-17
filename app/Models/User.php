@@ -14,6 +14,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, Notifiable, HasRoles;
 
     protected $fillable = [
+        'google_id',
         'first_name',
         'surname',
         'email',
@@ -22,6 +23,8 @@ class User extends Authenticatable
         'profession',
         'educational_background',
         'password',
+        'avatar',
+        'email_verified_at'
     ];
 
     protected $hidden = [
@@ -32,6 +35,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'birth_date' => 'date',
     ];
 
     public function getPermissionArray()
@@ -46,5 +50,15 @@ class User extends Authenticatable
         return Attribute::make(
             get: fn ($value) => \Carbon\Carbon::parse($value)->timezone('Asia/Jakarta')->translatedFormat('H:i \W\I\B d/m/Y'),
         );
+    }
+
+    public function isGoogleUser()
+    {
+        return !empty($this->google_id);
+    }
+
+    public function getDisplayNameAttribute()
+    {
+        return $this->first_name . ' ' . $this->surname;
     }
 }

@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\UserSelectCategory;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Auth;
 
 class RegisterController extends Controller
 {
@@ -64,6 +65,57 @@ class RegisterController extends Controller
         return redirect()->route('register1');
     }
 
+    public function googleCompleteRegistration()
+    {
+        $googleUser = session('google_user');
+
+        if (!$googleUser) {
+            return redirect()->route('login')->with('error', 'Session expired. Please try again.');
+        }
+
+        return inertia(
+            'Auth/GoogleRegisterComplete',
+            [
+                'googleUser' => $googleUser,
+                'auth' => auth()->user(),
+            ]
+        );
+    }
+
+    public function storeGooglePersonalData(Request $request)
+    {
+        $googleUser = session('google_user');
+
+        if (!$googleUser) {
+            return redirect()->route('login')->with('error', 'Session expired. Please try again.');
+        }
+
+        $request->validate([
+            'birth_date'     => 'required|date',
+            'gender'     => 'required',
+            'profession'     => 'required',
+            'educational_background'     => 'required',
+        ]);
+
+        $personaldata = [
+            'google_id'       => $googleUser['google_id'],
+            'first_name'      => $googleUser['first_name'],
+            'surname'         => $googleUser['surname'],
+            'email'           => $googleUser['email'],
+            'avatar'          => $googleUser['avatar'],
+            'birth_date'      => $request->birth_date,
+            'gender'          => $request->gender,
+            'profession'      => $request->profession,
+            'educational_background' => $request->educational_background,
+            'is_google_user'  => true,
+        ];
+
+        $request->session()->put('personaldata', $personaldata);
+        $request->session()->forget('google_user');
+
+        return redirect()->route('register1');
+    }
+
     public function storePreferenceData(Request $request, UserSelectCategory $userPref, Certificate $certificate)
     {
         $this->validate($request, [
@@ -73,7 +125,7 @@ class RegisterController extends Controller
 
         $personaldata = $request->session()->get('personaldata');
 
-        $user = User::create([
+        $userData = [
             'first_name' => $personaldata['first_name'],
             'surname' => $personaldata['surname'],
             'email' => $personaldata['email'],
@@ -81,8 +133,18 @@ class RegisterController extends Controller
             'gender' => $personaldata['gender'],
             'profession' => $personaldata['profession'],
             'educational_background' => $personaldata['educational_background'],
-            'password' => $personaldata['password']
-        ]);
+        ];
+
+        // handle google user and reguler user
+        if (isset($personaldata['google_id']) && $personaldata['is_google_user']) {
+            $userData['google_id'] = $personaldata['google_id'];
+            $userData['avatar'] = $personaldata['avatar'];
+            $userData['email_verified_at'] = $personaldata['email_verified_at'] ?? now();
+        } else {
+            $userData['password'] = $personaldata['password'];
+        }
+
+        $user = User::create($userData);
 
         $role = Role::findByName('basic user');
         $user->assignRole($role);
@@ -91,11 +153,11 @@ class RegisterController extends Controller
             foreach ($request->file('files') as $file) {
                 $originalName = $file->getClientOriginalName();
                 $certificate = $file->hashName();
-                $file->storeAs('public/file/certificates', $certificate); 
+                $file->storeAs('public/file/certificates', $certificate);
                 Certificate::create([
                     'user_id' => $user->id,
                     'original_certificate' => $originalName,
-                    'certificate' => $certificate, 
+                    'certificate' => $certificate,
                     'status' => 'pending',
                 ]);
             }
@@ -108,7 +170,11 @@ class RegisterController extends Controller
             $userPref->create(['category_id' => $category_id, 'user_id' => $user->id]);
         }
 
-        return redirect()->route('login');
+        $request->session()->forget('personaldata');
+
+        Auth::login($user);
+
+        return redirect()->route('account.dashboard');
     }
 
 }
