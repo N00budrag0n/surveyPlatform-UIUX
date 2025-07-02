@@ -286,7 +286,7 @@ export default function SurveyEdit() {
         formData.append('url_website', url_website);
         formData.append('embed_design', embed_design);
         formData.append('embed_prototype', embed_prototype);
-        formData.append('survey_visible', surveyVisibility);
+        formData.append('survey_visible', surveyVisible);
         formData.append('user_id', user_id);
 
         surveyCategoriesData.forEach(category => {
