@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import LayoutAccount from "../../../../Layouts/Account";
-import { Head, Link, usePage, router } from "@inertiajs/inertia-react";
+import { Head, Link, usePage } from "@inertiajs/inertia-react";
+import { Inertia } from "@inertiajs/inertia";
+import axios from "axios";
 
 export default function ArticleReportsIndex() {
     const { reports, statusCounts, filters } = usePage().props;
@@ -19,7 +21,7 @@ export default function ArticleReportsIndex() {
                 status: bulkStatus,
             });
 
-            router.reload();
+            Inertia.reload();
             setSelectedReports([]);
             setBulkStatus("");
         } catch (error) {
@@ -175,7 +177,7 @@ export default function ArticleReportsIndex() {
                                     placeholder="Search articles..."
                                     defaultValue={filters.q}
                                     onChange={(e) => {
-                                        router.get(
+                                        Inertia.get(
                                             "/account/article-reports",
                                             {
                                                 ...filters,
@@ -191,7 +193,7 @@ export default function ArticleReportsIndex() {
                                     className="form-select"
                                     value={filters.status || ""}
                                     onChange={(e) => {
-                                        router.get(
+                                        Inertia.get(
                                             "/account/article-reports",
                                             {
                                                 ...filters,
@@ -213,7 +215,7 @@ export default function ArticleReportsIndex() {
                                     className="form-select"
                                     value={filters.reason || ""}
                                     onChange={(e) => {
-                                        router.get(
+                                        Inertia.get(
                                             "/account/article-reports",
                                             {
                                                 ...filters,
@@ -245,7 +247,7 @@ export default function ArticleReportsIndex() {
                                     type="button"
                                     className="btn btn-outline-secondary w-100"
                                     onClick={() =>
-                                        router.get("/account/article-reports")
+                                        Inertia.get("/account/article-reports")
                                     }
                                 >
                                     Clear Filters
