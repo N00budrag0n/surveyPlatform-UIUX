@@ -53,6 +53,26 @@ const TableDashboardSurvey = ({ surveyData, surveys }) => {
                                                         TAM
                                                     </Link>
                                                 );
+                                            } else if (methodId == 3) {
+                                                return (
+                                                    <Link
+                                                        href={`ab_test/${survey.survey_id}`}
+                                                        className="btn btn-sm btn-style border-0 shadow"
+                                                        type="button"
+                                                    >
+                                                        A/B
+                                                    </Link>
+                                                );
+                                            } else if (methodId == 4) {
+                                                return (
+                                                    <Link
+                                                        href={`wcag_test/${survey.survey_id}`}
+                                                        className="btn btn-sm btn-style border-0 shadow"
+                                                        type="button"
+                                                    >
+                                                        WCAG
+                                                    </Link>
+                                                );
                                             }
                                         }
                                     )}
