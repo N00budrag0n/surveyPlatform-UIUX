@@ -152,6 +152,7 @@ export default function Login() {
 
                                         {/* Google Login Button */}
                                         <button
+                                            type="button"
                                             onClick={handleGoogleLogin}
                                             className="btn btn-outline-dark w-100 py-2 mb-3 d-flex align-items-center justify-content-center"
                                             style={{ borderRadius: "8px" }}
