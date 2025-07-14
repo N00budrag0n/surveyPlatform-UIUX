@@ -84,14 +84,23 @@ export default function UserIndex() {
                                         </td>
                                         <td>{user.email}</td>
                                         <td>
-                                            {user.roles.map((role, index) => (
-                                                <span
-                                                    className="btn btn-style btn-sm shadow-sm border-0 ms-2 mb-2"
-                                                    key={index}
-                                                >
-                                                    {role.name}
+                                            {user.roles &&
+                                            user.roles.length > 0 ? (
+                                                user.roles.map(
+                                                    (role, index) => (
+                                                        <span
+                                                            className="btn btn-style btn-sm shadow-sm border-0 ms-2 mb-2"
+                                                            key={index}
+                                                        >
+                                                            {role.name}
+                                                        </span>
+                                                    )
+                                                )
+                                            ) : (
+                                                <span className="text-muted">
+                                                    No roles assigned
                                                 </span>
-                                            ))}
+                                            )}
                                         </td>
                                         <td className="text-center">
                                             {hasAnyPermission([
