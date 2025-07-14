@@ -376,7 +376,8 @@ function Form() {
 
                 Swal.fire({
                     title: "Error!",
-                    html: `<div style="text-align: left; white-space: pre-wrap; font-family: monospace; font-size: 14px;">${errorMessage}</div>`,
+                    // html: `<div style="text-align: left; white-space: pre-wrap; font-family: monospace; font-size: 14px;">${errorMessage}</div>`,
+                    text: errorMessage,
                     icon: "error",
                     showConfirmButton: true,
                     confirmButtonText: "OK",
