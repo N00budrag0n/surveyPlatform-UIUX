@@ -335,7 +335,7 @@ function Form() {
             onError: (errors) => {
                 Swal.fire({
                     title: "Error!",
-                    text: errors?.message || "Data failed to save!",
+                    text: errors || "Data failed to save!",
                     icon: "error",
                     showConfirmButton: false,
                     timer: 1500,
