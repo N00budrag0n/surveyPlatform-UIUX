@@ -69,7 +69,7 @@ export default function UserIndex() {
                                                     users.per_page}
                                         </td>
                                         <td>
-                                            {user.roles[0].name ===
+                                            {user.roles && user.roles.length > 0 && user.roles[0].name ===
                                             "verified user" ? (
                                                 <>
                                                     <i className="fas fa-user-check" />{" "}
