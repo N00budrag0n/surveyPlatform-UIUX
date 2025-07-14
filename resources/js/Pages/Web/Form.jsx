@@ -206,7 +206,9 @@ function Form() {
     }, [formData, susValues, tamValues, abTestingResponses]);
 
     const loadSurveyData = () => {
-        const storedData = localStorage.getItem(`surveyData_${surveys.id}_${auth.id}`);
+        const storedData = localStorage.getItem(
+            `surveyData_${surveys.id}_${auth.id}`
+        );
         if (storedData) {
             const parsedData = JSON.parse(storedData);
             setFormData(parsedData.formData);
@@ -333,12 +335,51 @@ function Form() {
                 });
             },
             onError: (errors) => {
+                // Swal.fire({
+                //     title: "Error!",
+                //     text: errors || "Data failed to save!",
+                //     icon: "error",
+                //     showConfirmButton: false,
+                //     timer: 1500,
+                // });
+                console.error("Form submission error:", errors);
+
+                let errorMessage;
+
+                if (errors?.message) {
+                    errorMessage = errors.message;
+                } else if (typeof errors === "string") {
+                    errorMessage = errors;
+                } else if (errors && typeof errors === "object") {
+                    // Try to extract meaningful error messages
+                    const errorMessages = [];
+
+                    Object.entries(errors).forEach(([key, value]) => {
+                        if (Array.isArray(value)) {
+                            errorMessages.push(...value);
+                        } else if (typeof value === "string") {
+                            errorMessages.push(value);
+                        } else {
+                            errorMessages.push(
+                                `${key}: ${JSON.stringify(value)}`
+                            );
+                        }
+                    });
+
+                    errorMessage =
+                        errorMessages.length > 0
+                            ? errorMessages.join("\n")
+                            : JSON.stringify(errors, null, 2);
+                } else {
+                    errorMessage = "An unknown error occurred";
+                }
+
                 Swal.fire({
                     title: "Error!",
-                    text: errors || "Data failed to save!",
+                    html: `<div style="text-align: left; white-space: pre-wrap; font-family: monospace; font-size: 14px;">${errorMessage}</div>`,
                     icon: "error",
-                    showConfirmButton: false,
-                    timer: 1500,
+                    showConfirmButton: true,
+                    confirmButtonText: "OK",
                 });
             },
             onFinish: () => {
@@ -605,10 +646,10 @@ function Form() {
                                                                                                     className="mb-4 pb-4 border-bottom"
                                                                                                 >
                                                                                                     <h6 className="mb-3 fw-semibold">
-                                                                                                        {
-                                                                                                            (compIndex+1) + ". " +
-                                                                                                            comparison.title
-                                                                                                        }
+                                                                                                        {compIndex +
+                                                                                                            1 +
+                                                                                                            ". " +
+                                                                                                            comparison.title}
                                                                                                     </h6>
 
                                                                                                     <div className="row g-4">
@@ -867,9 +908,7 @@ function Form() {
                                                             </AccordionLayout>
                                                         );
                                                     } else if (methodId == 4) {
-                                                        return (
-                                                            ""
-                                                        );
+                                                        return "";
                                                     } else {
                                                         return (
                                                             <div key={index}>
