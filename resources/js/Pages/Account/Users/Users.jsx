@@ -9,6 +9,7 @@ import Delete from "../../../Components/Delete";
 
 export default function UserIndex() {
     const { users } = usePage().props;
+    console.log(users);
 
     return (
         <>
@@ -84,23 +85,19 @@ export default function UserIndex() {
                                         </td>
                                         <td>{user.email}</td>
                                         <td>
-                                            {user.roles &&
-                                            user.roles.length > 0 ? (
-                                                user.roles.map(
-                                                    (role, index) => (
-                                                        <span
-                                                            className="btn btn-style btn-sm shadow-sm border-0 ms-2 mb-2"
-                                                            key={index}
-                                                        >
-                                                            {role.name}
-                                                        </span>
-                                                    )
-                                                )
+                                            {user.roles && user.roles.length > 0 ? (
+                                                user.roles.map((role, index) => (
+                                                    <span
+                                                        className="btn btn-style btn-sm shadow-sm border-0 ms-2 mb-2"
+                                                        key={index}
+                                                    >
+                                                        {role.name}
+                                                    </span>
+                                                ))
                                             ) : (
-                                                <span className="text-muted">
-                                                    No roles assigned
-                                                </span>
-                                            )}
+                                                <span className="text-muted">No roles assigned</span>
+                                            )
+                                            }
                                         </td>
                                         <td className="text-center">
                                             {hasAnyPermission([
