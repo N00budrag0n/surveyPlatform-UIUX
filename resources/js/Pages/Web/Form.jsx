@@ -332,10 +332,10 @@ function Form() {
                     Inertia.visit("/");
                 });
             },
-            onError: () => {
+            onError: (errors) => {
                 Swal.fire({
                     title: "Error!",
-                    text: "Data failed to save!",
+                    text: errors?.message || "Data failed to save!",
                     icon: "error",
                     showConfirmButton: false,
                     timer: 1500,
